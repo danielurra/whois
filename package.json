@@ -1,0 +1,19 @@
+{
+  "name": "whois.ciscoar.com",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "p3030-whois.js",
+  "scripts": {
+    "start": "node p3030-whois.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17"
+  }
+}

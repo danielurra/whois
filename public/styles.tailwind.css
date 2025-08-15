@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+}
+
+h2 {
+    text-align: center;
+}
+
+.container {
+    display: flex;
+    gap: 47px; /* Space between WAN1 and WAN2 */
+    justify-content: center; /* Center the sections */
+}
+
+.section {
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: fit-content;
+    background-color: #f8f8f8;
+}
+
+.copyMessage {
+    color: green;
+    margin-left: 10px;
+    font-weight: bold;
+    display: none;
+}
+
+.result {
+    border: 1px solid #ccc;
+    padding: 10px;
+    min-height: 50px;
+    width: 400px;
+    background: #f9f9f9;
+    white-space: pre-line;
+    font-weight: bold;
+}
+
+button {
+    margin-top: 5px;
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+input {
+    padding: 6px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}

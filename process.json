@@ -1,0 +1,15 @@
+{
+  "apps": [
+    {
+      "name": "p3030-whois",
+      "script": "p3030-whois.js",
+      "cwd": "/var/www/whois.ciscoar.com",
+      "exec_mode": "fork",
+      "instances": 1,
+      "watch": false,
+      "log_file": "/root/.pm2/logs/p3030-whois-combined.log",
+      "error_file": "/root/.pm2/logs/p3030-whois-error.log",
+      "out_file": "/root/.pm2/logs/p3030-whois-out.log"
+    }
+  ]
+}
