@@ -861,3 +861,46 @@ video {
 .result-logo img {
   max-height: 80px;
 }
+
+/* Custom centering for WAN panels */
+.wan-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  padding: 20px;
+}
+
+.wan-panel input[type="text"] {
+  margin: 0 auto;
+  display: block;
+}
+
+.wan-panel button {
+  margin: 10px auto;
+  display: block;
+}
+
+.wan-panel .result {
+  text-align: center;
+  margin: 0 auto;
+}
+
+.wan-panel img {
+  display: block;
+  margin: 20px auto 10px auto;
+  max-width: 150px;
+}
+
+.wan-panel .copy-btn {
+  margin: 20px auto 0 auto;
+  display: block;
+}
+
+/* If the parent container is not centered, add this: */
+.wan-container {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
