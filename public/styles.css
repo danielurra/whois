@@ -348,6 +348,7 @@ input:where([type='button']),
 input:where([type='reset']),
 input:where([type='submit']) {
   -webkit-appearance: button;
+  appearance: button;
   /* 1 */
   background-color: transparent;
   /* 2 */
@@ -395,6 +396,7 @@ Correct the cursor style of increment and decrement buttons in Safari.
 
 [type='search'] {
   -webkit-appearance: textfield;
+  appearance: textfield;
   /* 1 */
   outline-offset: -2px;
   /* 2 */
@@ -534,8 +536,6 @@ embed,
 object {
   display: block;
   /* 1 */
-  vertical-align: middle;
-  /* 2 */
 }
 
 /*
@@ -630,6 +630,10 @@ video {
 
 .w-full {
   width: 100%;
+}
+
+.max-w-xs {
+  max-width: 20rem;
 }
 
 .flex-col {
@@ -795,71 +799,6 @@ video {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
-body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-  padding: 0;
-}
-
-h2 {
-  text-align: center;
-}
-
-.container {
-  display: flex;
-  gap: 47px;
-  /* Space between WAN1 and WAN2 */
-  justify-content: center;
-  /* Center the sections */
-}
-
-.section {
-  padding: 15px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: -moz-fit-content;
-  width: fit-content;
-  background-color: #f8f8f8;
-}
-
-.copyMessage {
-  color: green;
-  margin-left: 10px;
-  font-weight: bold;
-  display: none;
-}
-
-.result {
-  border: 1px solid #ccc;
-  padding: 10px;
-  min-height: 50px;
-  width: 400px;
-  background: #f9f9f9;
-  white-space: pre-line;
-  font-weight: bold;
-}
-
-button {
-  margin-top: 5px;
-  padding: 8px 12px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
-input {
-  padding: 6px;
-  margin-bottom: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
 
 .hover\:bg-blue-700:hover {
   --tw-bg-opacity: 1;
@@ -900,4 +839,25 @@ input {
   .md\:flex-row {
     flex-direction: row;
   }
+}
+
+.result-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  min-height: 300px; /* adjust if you want taller boxes */
+  text-align: center;
+}
+
+.result-text {
+  flex-grow: 1; /* allows text area to expand if content is long */
+}
+
+.result-logo {
+  margin-top: 20px;
+}
+
+.result-logo img {
+  max-height: 80px;
 }
