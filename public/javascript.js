@@ -12,7 +12,7 @@ function runLookup(wan) {
   copyMessage.style.display = "none"; // Hide previous copy message
 
   if (!validateIP(ipInput)) {
-    resultArea.innerHTML = "<b>Invalid IP Address!</b>";
+    resultArea.innerHTML = "<div style='text-align:center'><b>Invalid IP Address!</b></div>";
     return;
   }
 
@@ -27,16 +27,16 @@ function runLookup(wan) {
       const logo = data.logo || "generic_logo.png";
 
       const formattedOutput = `
-        <b>IP Address: ${ipInput}</b><br><br>
-        ${data.output.replace(/\n/g, "<br>")}<br><br>
         <div style="text-align:center">
+          <b>IP Address: ${ipInput}</b><br><br>
+          ${data.output.replace(/\n/g, "<br>")}<br><br>
           <img src="/img/us_isp_logos/${logo}" alt="ISP Logo" style="max-height:80px; margin-top:10px;" />
         </div>
       `;
       resultArea.innerHTML = formattedOutput;
     })
     .catch((error) => {
-      resultArea.innerHTML = "<b>Error:</b> " + error;
+      resultArea.innerHTML = "<div style='text-align:center'><b>Error:</b> " + error + "</div>";
     });
 }
 
