@@ -12,7 +12,7 @@ function runLookup(wan) {
   copyMessage.style.display = "none"; // Hide previous copy message
 
   if (!validateIP(ipInput)) {
-    resultArea.innerHTML = "<div style='text-align:center'><b>Invalid IP Address!</b></div>";
+    resultArea.innerHTML = "<div class='text-center'><b>Invalid IP Address!</b></div>";
     return;
   }
 
@@ -24,61 +24,23 @@ function runLookup(wan) {
     .then((response) => response.json())
     .then((data) => {
       const logo = data.logo || "generic_logo.png";
-
       const formattedOutput = `
-        <div class="result-container">
-          <div class="result-text">
+        <div class="result-container flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="result-text flex-1">
             <b>IP Address: ${ipInput}</b><br><br>
             ${data.output.replace(/\n/g, "<br>")}
           </div>
-          <div class="result-logo">
-            <img src="/img/us_isp_logos/${logo}" alt="ISP Logo" />
+          <div class="result-logo flex-shrink-0">
+            <img src="/img/us_isp_logos/${logo}" alt="ISP Logo" class="max-h-20 mt-2 md:mt-0" />
           </div>
         </div>
       `;
-
       resultArea.innerHTML = formattedOutput;
     })
     .catch((error) => {
-      resultArea.innerHTML = "<div style='text-align:center'><b>Error:</b> " + error + "</div>";
+      resultArea.innerHTML = `<div class='text-center'><b>Error:</b> ${error}</div>`;
     });
 }
-
-// function runLookup(wan) {
-//   const ipInput = document.getElementById(`ipAddress-${wan}`).value.trim();
-//   const resultArea = document.getElementById(`result-${wan}`);
-//   const copyMessage = document.getElementById(`copyMessage-${wan}`);
-
-//   copyMessage.style.display = "none"; // Hide previous copy message
-
-//   if (!validateIP(ipInput)) {
-//     resultArea.innerHTML = "<div style='text-align:center'><b>Invalid IP Address!</b></div>";
-//     return;
-//   }
-
-//   fetch("/whois", {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify({ ip: ipInput }),
-//   })
-//     .then((response) => response.json())
-//     .then((data) => {
-//       const ispName = data.output.trim().split("\n").pop(); // Last line is usually ISP
-//       const logo = data.logo || "generic_logo.png";
-
-//       const formattedOutput = `
-//         <div style="text-align:center">
-//           <b>IP Address: ${ipInput}</b><br><br>
-//           ${data.output.replace(/\n/g, "<br>")}<br><br>
-//           <img src="/img/us_isp_logos/${logo}" alt="ISP Logo" style="max-height:80px; margin-top:10px;" />
-//         </div>
-//       `;
-//       resultArea.innerHTML = formattedOutput;
-//     })
-//     .catch((error) => {
-//       resultArea.innerHTML = "<div style='text-align:center'><b>Error:</b> " + error + "</div>";
-//     });
-// }
 
 function clearForm(wan) {
   document.getElementById(`ipAddress-${wan}`).value = "";
@@ -95,5 +57,21 @@ function copyToClipboard(wan) {
     setTimeout(() => {
       copyMessage.style.display = "none";
     }, 3000);
+  }).catch(err => {
+    console.error('Failed to copy text: ', err);
   });
 }
+
+// Event delegation for clear buttons (works with dynamically added elements)
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('clear-input')) {
+    const wan = e.target.dataset.wan;
+    clearForm(wan);
+  }
+});
+
+// Optional: Auto-focus the first input on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const firstInput = document.getElementById('ipAddress-WAN1');
+  if (firstInput) firstInput.focus();
+});
