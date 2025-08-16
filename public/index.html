@@ -37,7 +37,14 @@
       <div class="flex gap-2 mb-3 justify-center">
         <button onclick="runLookup('WAN1')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Run Lookup</button>
       </div>
-      <div id="result-WAN1" class="border border-gray-300 bg-gray-100 p-2 rounded text-sm font-mono text-center whitespace-pre-wrap mb-3 w-full"></div>
+      
+      <!-- Result Area -->
+      <div id="result-WAN1" 
+           class="border border-gray-300 bg-gray-50 p-4 rounded text-sm mb-3 w-full text-left">
+        <p class="text-gray-400 italic text-center">No results yet</p>
+      </div>
+      
+      <!-- Copy Button -->
       <div class="flex items-center justify-center">
         <button onclick="copyToClipboard('WAN1')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Copy to Clipboard</button>
         <span id="copyMessage-WAN1" class="text-green-600 font-semibold ml-3 hidden">✔ Copied!</span>
@@ -66,7 +73,14 @@
       <div class="flex gap-2 mb-3 justify-center">
         <button onclick="runLookup('WAN2')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Run Lookup</button>
       </div>
-      <div id="result-WAN2" class="border border-gray-300 bg-gray-100 p-2 rounded text-sm font-mono text-center whitespace-pre-wrap mb-3 w-full"></div>
+      
+      <!-- Result Area -->
+      <div id="result-WAN2" 
+           class="border border-gray-300 bg-gray-50 p-4 rounded text-sm mb-3 w-full text-left">
+        <p class="text-gray-400 italic text-center">No results yet</p>
+      </div>
+      
+      <!-- Copy Button -->
       <div class="flex items-center justify-center">
         <button onclick="copyToClipboard('WAN2')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Copy to Clipboard</button>
         <span id="copyMessage-WAN2" class="text-green-600 font-semibold ml-3 hidden">✔ Copied!</span>
