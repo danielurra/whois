@@ -25,6 +25,7 @@
           id="ipAddress-WAN1"
           placeholder="e.g., 8.8.8.8"
           class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-400 text-center"
+          onkeydown="if(event.key==='Enter') runLookup('WAN1')"
         />
         <button
           onclick="clearForm('WAN1')"
@@ -53,6 +54,7 @@
           id="ipAddress-WAN2"
           placeholder="e.g., 1.1.1.1"
           class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-400 text-center"
+          onkeydown="if(event.key==='Enter') runLookup('WAN2')"
         />
         <button
           onclick="clearForm('WAN2')"
