@@ -30,8 +30,12 @@ function runLookup(wan) {
             <b>IP Address: ${ipInput}</b><br><br>
             ${data.output.replace(/\n/g, "<br>")}
           </div>
-          <div class="result-logo flex-shrink-0">
-            <img src="/img/us_isp_logos/${logo}" alt="ISP Logo" class="max-h-20 mt-2 md:mt-0" />
+          <div class="result-logo flex-shrink-0 max-w-[100px]">
+            <img 
+              src="/img/us_isp_logos/${logo}" 
+              alt="ISP Logo" 
+              class="max-h-20 max-w-full object-contain mt-2 md:mt-0" 
+            />
           </div>
         </div>
       `;
@@ -41,7 +45,6 @@ function runLookup(wan) {
       resultArea.innerHTML = `<div class='text-center p-4'><b>Error:</b> ${error}</div>`;
     });
 }
-
 
 function clearForm(wan) {
   document.getElementById(`ipAddress-${wan}`).value = "";
