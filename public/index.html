@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Whois Lookup - WAN1 & WAN2</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.tailwind.css" />
   <link rel="icon" href="img/favicon.ico" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7483705672333613"
     crossorigin="anonymous"></script>
@@ -19,12 +19,12 @@
     <div class="wan-panel bg-white border border-gray-300 rounded-lg p-6 shadow-md w-full md:w-96">
       <h3 class="text-xl font-semibold text-center mb-4">WAN1</h3>
       <label for="ipAddress-WAN1" class="block mb-1 font-medium text-left">Enter IP Address:</label>
-      <div class="input-group w-full max-w-xs mx-auto mb-3">
+      <div class="flex items-center gap-2 w-full max-w-xs mx-auto mb-3">
         <input
           type="text"
           id="ipAddress-WAN1"
           placeholder="e.g., 8.8.8.8"
-          class="pl-4 pr-8 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-400 text-left"
+          class="flex-1 min-w-0 pl-4 pr-8 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-400 text-left"
           onkeydown="if(event.key==='Enter') runLookup('WAN1')"
         />
         <button
@@ -48,12 +48,12 @@
     <div class="wan-panel bg-white border border-gray-300 rounded-lg p-6 shadow-md w-full md:w-96">
       <h3 class="text-xl font-semibold text-center mb-4">WAN2</h3>
       <label for="ipAddress-WAN2" class="block mb-1 font-medium text-left">Enter IP Address:</label>
-      <div class="input-group w-full max-w-xs mx-auto mb-3">
+      <div class="flex items-center gap-2 w-full max-w-xs mx-auto mb-3">
         <input
           type="text"
           id="ipAddress-WAN2"
           placeholder="e.g., 1.1.1.1"
-          class="pl-4 pr-8 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-400 text-left"
+          class="flex-1 min-w-0 pl-4 pr-8 py-2 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-400 text-left"
           onkeydown="if(event.key==='Enter') runLookup('WAN2')"
         />
         <button
