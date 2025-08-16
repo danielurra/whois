@@ -900,6 +900,9 @@ video {
   display: block;
 }
 
+.wan-panel label {
+    text-align: left !important;
+  }
 /* If the parent container is not centered, add this: */
 .wan-container {
   display: flex;
