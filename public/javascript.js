@@ -25,17 +25,13 @@ function runLookup(wan) {
     .then((data) => {
       const logo = data.logo || "generic_logo.png";
       const formattedOutput = `
-        <div class="result-container flex flex-col md:flex-row items-center justify-between gap-4 p-4 rounded-lg bg-gray-50 shadow">
-          <div class="result-text flex-1">
+        <div class="result-container flex flex-col items-center gap-4 p-4 rounded-lg bg-gray-50 shadow">
+          <div class="result-text w-full text-center">
             <b>IP Address: ${ipInput}</b><br><br>
             ${data.output.replace(/\n/g, "<br>")}
           </div>
-          <div class="result-logo flex-shrink-0 max-w-[100px]">
-            <img 
-              src="/img/us_isp_logos/${logo}" 
-              alt="ISP Logo" 
-              class="max-h-20 max-w-full object-contain mt-2 md:mt-0" 
-            />
+          <div class="result-logo flex-shrink-0">
+            <img src="/img/us_isp_logos/${logo}" alt="ISP Logo" class="max-h-20 mt-2" />
           </div>
         </div>
       `;
