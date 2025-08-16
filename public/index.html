@@ -13,7 +13,7 @@
 
   <h2 class="text-2xl font-bold text-center mb-6">Whois Lookup - WAN1 & WAN2</h2>
 
-  <div class="wan-container flex justify-center gap-6">
+  <div class="wan-container flex flex-col md:flex-row justify-center gap-6">
     
     <!-- WAN1 Section -->
     <div class="wan-panel bg-white border border-gray-300 rounded-lg p-6 shadow-md w-full md:w-96">
@@ -24,11 +24,12 @@
           type="text"
           id="ipAddress-WAN1"
           placeholder="e.g., 8.8.8.8"
-          class="w-full px-3 py-2 pr-10 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-400 text-center"
+          class="w-full px-3 py-2 pr-8 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-400 text-center"
         />
         <button
           onclick="clearForm('WAN1')"
-          class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 text-xl cursor-pointer bg-transparent border-0 p-1 z-10"
+          class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl cursor-pointer bg-transparent border-0 p-0 w-5 h-5 flex items-center justify-center"
+          aria-label="Clear input"
         >&times;</button>
       </div>
       <div class="flex gap-2 mb-3 justify-center">
@@ -50,11 +51,12 @@
           type="text"
           id="ipAddress-WAN2"
           placeholder="e.g., 1.1.1.1"
-          class="w-full px-3 py-2 pr-10 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-400 text-center"
+          class="w-full px-3 py-2 pr-8 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-400 text-center"
         />
         <button
           onclick="clearForm('WAN2')"
-          class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 text-xl cursor-pointer bg-transparent border-0 p-1 z-10"
+          class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl cursor-pointer bg-transparent border-0 p-0 w-5 h-5 flex items-center justify-center"
+          aria-label="Clear input"
         >&times;</button>
       </div>
       <div class="flex gap-2 mb-3 justify-center">
