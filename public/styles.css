@@ -917,5 +917,5 @@ video {
 .input-group input {
   flex: 1;
   min-width: 0;
-  padding-left: 1rem !important;
+  padding-left: 0.5rem !important;
 }
