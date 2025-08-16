@@ -906,3 +906,15 @@ video {
   justify-content: center;
   gap: 40px;
 }
+
+/* Ensure consistent input+button alignment */
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-group input {
+  flex: 1;
+  min-width: 0;
+}
