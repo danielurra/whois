@@ -7,15 +7,21 @@ function validateIP(ip) {
 function runLookup(wan) {
   const ipInput = document.getElementById(`ipAddress-${wan}`).value.trim();
   const resultArea = document.getElementById(`result-${wan}`);
+  const resultText = resultArea.querySelector(".result-text");
+  const resultLogo = resultArea.querySelector(".result-logo");
+  const resultImg = resultLogo.querySelector("img");
   const copyMessage = document.getElementById(`copyMessage-${wan}`);
 
   copyMessage.style.display = "none"; // Hide previous copy message
 
+  // Validate IP
   if (!validateIP(ipInput)) {
-    resultArea.innerHTML = "<div class='text-center p-4'><b>Invalid IP Address!</b></div>";
+    resultText.innerHTML = "<div class='text-center p-4'><b>Invalid IP Address!</b></div>";
+    resultLogo.classList.add("hidden");
     return;
   }
 
+  // Fetch whois
   fetch("/whois", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -24,23 +30,25 @@ function runLookup(wan) {
     .then((response) => response.json())
     .then((data) => {
       const logo = data.logo || "generic_logo.png";
-      const formattedOutput = `
-        <div class="result-container flex flex-col items-center gap-4 p-4 rounded-lg bg-gray-50 shadow">
-          <div class="result-text w-full text-center">
-            <b>IP Address: ${ipInput}</b><br><br>
-            ${data.output.replace(/\n/g, "<br>")}
-          </div>
-          <div class="result-logo flex-shrink-0">
-            <img src="/img/us_isp_logos/${logo}" alt="ISP Logo" class="max-h-20 mt-2" />
-          </div>
+
+      // Update text
+      resultText.innerHTML = `
+        <div class="w-full text-center">
+          <b>IP Address: ${ipInput}</b><br><br>
+          ${data.output.replace(/\n/g, "<br>")}
         </div>
       `;
-      resultArea.innerHTML = formattedOutput;
+
+      // Update logo
+      resultImg.src = `/img/us_isp_logos/${logo}`;
+      resultLogo.classList.remove("hidden");
     })
     .catch((error) => {
-      resultArea.innerHTML = `<div class='text-center p-4'><b>Error:</b> ${error}</div>`;
+      resultText.innerHTML = `<div class='text-center p-4'><b>Error:</b> ${error}</div>`;
+      resultLogo.classList.add("hidden");
     });
 }
+
 
 function clearForm(wan) {
   document.getElementById(`ipAddress-${wan}`).value = "";
