@@ -8,18 +8,20 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
+// __dirname workaround in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const app = express();
 const port = 3030;
 
 app.use(cors());
 app.use(express.json());
 
-// __dirname workaround in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // ISP logo folder
-const logoFolder = '/var/www/whois.ciscoar.com/public/img/us_isp_logos';
+// const logoFolder = '/var/www/whois.ciscoar.com/public/img/us_isp_logos';
+const logoFolder = path.join(__dirname, 'public', 'img', 'us_isp_logos');
 
 app.post('/whois', (req, res) => {
   const { ip } = req.body;
