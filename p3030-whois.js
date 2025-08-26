@@ -47,9 +47,15 @@ app.post('/whois', (req, res) => {
 
     // Find a matching logo file by checking both lines
     const matchedLogo = logoFiles.find((file) => {
-        const processedFileName = path.basename(file, path.extname(file)).toLowerCase().replace(/[^a-z0-9]/g, '');
+        const fileName = path.basename(file, path.extname(file)).toLowerCase();
+        const processedFileName = fileName.replace(/[^a-z0-9]/g, '');
+        const filenameParts = fileName.split(/[^a-z0-9]+/).filter(part => part.length > 0);
+        
         // Return true if either the first or last line includes the processed filename
-        return firstLine.includes(processedFileName) || lastLine.includes(processedFileName);
+        // OR if any part of the filename (split by underscores) matches the output
+        return firstLine.includes(processedFileName) || 
+               lastLine.includes(processedFileName) ||
+               filenameParts.some(part => firstLine.includes(part) || lastLine.includes(part));
     });
 
     const logo = matchedLogo || 'generic_logo.png';
