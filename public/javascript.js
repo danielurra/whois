@@ -10,9 +10,6 @@ function runLookup(wan) {
   const resultText = resultArea.querySelector(".result-text");
   const resultLogo = resultArea.querySelector(".result-logo");
   const resultImg = resultLogo.querySelector("img");
-  const copyMessage = document.getElementById(`copyMessage-${wan}`);
-
-  copyMessage.style.display = "none"; // Hide previous copy message
 
   // Validate IP
   if (!validateIP(ipInput)) {
@@ -65,29 +62,11 @@ function clearForm(wan) {
   const resultArea = document.getElementById(`result-${wan}`);
   const resultText = resultArea.querySelector(".result-text");
   const resultLogo = resultArea.querySelector(".result-logo");
-  const copyMessage = document.getElementById(`copyMessage-${wan}`);
 
   if (resultText) resultText.innerHTML = "";
   if (resultLogo) resultLogo.classList.add("hidden");
-  if (copyMessage) copyMessage.style.display = "none";
 }
 
-function copyToClipboard(wan) {
-  const resultText = document.getElementById(`result-${wan}`).innerText;
-  const copyMessage = document.getElementById(`copyMessage-${wan}`);
-
-  navigator.clipboard
-    .writeText(resultText)
-    .then(() => {
-      copyMessage.style.display = "inline";
-      setTimeout(() => {
-        copyMessage.style.display = "none";
-      }, 3000);
-    })
-    .catch((err) => {
-      console.error("Failed to copy text: ", err);
-    });
-}
 
 // Event delegation for clear buttons
 document.addEventListener("click", function (e) {
