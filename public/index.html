@@ -12,7 +12,10 @@
 <body class="bg-gray-50 text-gray-800 font-sans p-6">
 
   <h2 class="text-2xl font-bold text-center mb-6">US ISP Lookup tool</h2>
-  <h3 class="text-center">Enter the IP Address to know who it belongs to (ATT, Comcast, Verizon, etc.)</h3>
+  <div class="text-center mb-6">
+    <img src="img/us-map-flag-background.png" alt="US Map Flag" class="mx-auto" style="width: 5%; height: auto;">
+  </div>
+  <h3 class="text-center" style="padding-bottom: 10px;">Enter the <b>IP Address</b> to know who it belongs to (ATT, Comcast, Verizon, etc.)</h3>
 
   <div class="wan-container flex flex-col md:flex-row justify-center gap-6">
     
@@ -49,12 +52,6 @@
           <img src="" alt="ISP Logo" class="p-2 max-h-40 object-contain mx-auto">
         </div>
       </div>
-      
-      <!-- Copy Button -->
-      <div class="flex items-center justify-center">
-        <button onclick="copyToClipboard('WAN1')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Copy to Clipboard</button>
-        <span id="copyMessage-WAN1" class="text-green-600 font-semibold ml-3 hidden">✔ Copied!</span>
-      </div>
     </div>
 
     <!-- WAN2 Section -->
@@ -89,12 +86,6 @@
         <div class="result-logo hidden">
           <img src="" alt="ISP Logo" class="p-2 max-h-40 object-contain mx-auto">
         </div>
-      </div>
-      
-      <!-- Copy Button -->
-      <div class="flex items-center justify-center">
-        <button onclick="copyToClipboard('WAN2')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Copy to Clipboard</button>
-        <span id="copyMessage-WAN2" class="text-green-600 font-semibold ml-3 hidden">✔ Copied!</span>
       </div>
     </div>
 
