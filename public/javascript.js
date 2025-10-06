@@ -26,7 +26,7 @@ function runLookup(wan) {
   fetch("/whois", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ip: ipInput }),
+    body: JSON.stringify({ ip: ipInput, wan: wan }),
   })
     .then((response) => {
       if (!response.ok) throw new Error("Lookup failed");
@@ -76,8 +76,25 @@ document.addEventListener("click", function (e) {
   }
 });
 
+// Fetch and display total query count
+async function updateQueryCount() {
+  try {
+    const response = await fetch("/api/stats/count");
+    const data = await response.json();
+    const counterElement = document.getElementById("query-counter");
+    if (counterElement && data.total !== undefined) {
+      counterElement.textContent = data.total.toLocaleString();
+    }
+  } catch (error) {
+    console.error("Error fetching query count:", error);
+  }
+}
+
 // Auto-focus the first input on page load
 document.addEventListener("DOMContentLoaded", function () {
   const firstInput = document.getElementById("ipAddress-WAN1");
   if (firstInput) firstInput.focus();
+
+  // Update query count on page load
+  updateQueryCount();
 });
