@@ -144,33 +144,49 @@ logoutBtn.addEventListener('click', () => {
 });
 
 // Toggle between login and register forms
-showLoginBtn.addEventListener('click', () => {
+const authTitle = document.querySelector('#auth-section h1');
+const backToLoginDiv = document.getElementById('back-to-login');
+const signUpLinkDiv = document.querySelector('#auth-section > div > div:nth-child(4)');
+
+showLoginBtn.addEventListener('click', (e) => {
+  e.preventDefault();
   loginForm.classList.remove('hidden');
   registerForm.classList.add('hidden');
-  showLoginBtn.classList.remove('bg-gray-300', 'text-gray-700');
-  showLoginBtn.classList.add('bg-blue-600', 'text-white');
-  showRegisterBtn.classList.remove('bg-blue-600', 'text-white');
-  showRegisterBtn.classList.add('bg-gray-300', 'text-gray-700');
+  backToLoginDiv.classList.add('hidden');
+  signUpLinkDiv.classList.remove('hidden');
+  authTitle.textContent = 'Sign in';
 });
 
-showRegisterBtn.addEventListener('click', () => {
+showRegisterBtn.addEventListener('click', (e) => {
+  e.preventDefault();
   registerForm.classList.remove('hidden');
   loginForm.classList.add('hidden');
-  showRegisterBtn.classList.remove('bg-gray-300', 'text-gray-700');
-  showRegisterBtn.classList.add('bg-green-600', 'text-white');
-  showLoginBtn.classList.remove('bg-blue-600', 'text-white');
-  showLoginBtn.classList.add('bg-gray-300', 'text-gray-700');
+  signUpLinkDiv.classList.add('hidden');
+  backToLoginDiv.classList.remove('hidden');
+  authTitle.textContent = 'Sign up';
 });
 
 // UI Functions
 function showAuth() {
   authSection.classList.remove('hidden');
   dashboardSection.classList.add('hidden');
+  document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  document.body.style.minHeight = '100vh';
+  document.body.style.display = 'flex';
+  document.body.style.alignItems = 'center';
+  document.body.style.justifyContent = 'center';
+  document.body.style.padding = '20px';
 }
 
 function showDashboard() {
   authSection.classList.add('hidden');
   dashboardSection.classList.remove('hidden');
+  document.body.style.background = '#f9fafb';
+  document.body.style.minHeight = 'auto';
+  document.body.style.display = 'block';
+  document.body.style.alignItems = 'initial';
+  document.body.style.justifyContent = 'initial';
+  document.body.style.padding = '24px';
   if (currentUser) {
     userNameSpan.textContent = `${currentUser.firstName} ${currentUser.lastName}`;
   }
@@ -265,18 +281,19 @@ function renderTable(queries) {
 
     return `
       <tr class="hover:bg-gray-50">
-        <td class="px-4 py-3 text-sm">${query.id}</td>
-        <td class="px-4 py-3 text-sm font-mono">${query.searched_ip}</td>
-        <td class="px-4 py-3 text-sm">${organization}</td>
-        <td class="px-2 py-2 text-sm text-center">
-          <img src="/img/us_isp_logos/${query.matched_logo}" alt="Logo" class="max-h-6 w-auto max-w-[40px] object-contain inline-block" title="${query.matched_logo}">
+        <td class="px-2 py-2 text-sm">${query.id}</td>
+        <td class="px-2 py-2 text-xs font-mono">${query.searched_ip}</td>
+        <td class="px-2 py-2 text-xs">${organization}</td>
+        <td class="px-1 py-2 text-sm text-center">
+          <img src="/img/us_isp_logos/${query.matched_logo}" alt="Logo" style="max-height: 32px; max-width: 50px; width: auto; height: auto; object-fit: contain;" class="inline-block" title="${query.matched_logo}">
         </td>
-        <td class="px-4 py-3 text-sm font-mono">${query.visitor_ip || '<i class="text-gray-400">N/A</i>'}</td>
-        <td class="px-4 py-3 text-sm">${query.wan_panel || '<i class="text-gray-400">N/A</i>'}</td>
-        <td class="px-4 py-3 text-sm">${formattedDate}</td>
-        <td class="px-4 py-3 text-center">
+        <td class="px-2 py-2 text-xs font-mono">${query.visitor_ip || '<i class="text-gray-400">N/A</i>'}</td>
+        <td class="px-2 py-2 text-xs">${query.wan_panel || '<i class="text-gray-400">N/A</i>'}</td>
+        <td class="px-2 py-2 text-xs whitespace-nowrap">${formattedDate}</td>
+        <td class="px-2 py-2 text-center whitespace-nowrap">
           <button
-            class="delete-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold"
+            class="delete-btn text-white px-3 py-1 rounded text-xs font-semibold border border-white"
+            style="background-color: #dc2626; min-width: 60px;"
             data-id="${query.id}"
             title="Delete query #${query.id}"
           >
