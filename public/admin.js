@@ -9,6 +9,12 @@ let currentPage = 1;
 let totalPages = 1;
 let isLoading = false;
 
+// Users state
+let usersCurrentPage = 1;
+let usersTotalPages = 1;
+let isUsersLoading = false;
+let currentView = 'queries'; // 'queries' or 'users'
+
 // Get DOM elements
 const authSection = document.getElementById('auth-section');
 const dashboardSection = document.getElementById('dashboard-section');
@@ -32,6 +38,35 @@ const totalQueriesEl = document.getElementById('total-queries');
 const currentPageEl = document.getElementById('current-page');
 const totalPagesEl = document.getElementById('total-pages');
 const exportCsvBtn = document.getElementById('export-csv-btn');
+
+// Tab elements
+const tabQueries = document.getElementById('tab-queries');
+const tabUsers = document.getElementById('tab-users');
+const queriesSection = document.getElementById('queries-section');
+const usersSection = document.getElementById('users-section');
+
+// Users section elements
+const usersSearchInput = document.getElementById('users-search-input');
+const usersSortField = document.getElementById('users-sort-field');
+const usersSortOrder = document.getElementById('users-sort-order');
+const usersPageSize = document.getElementById('users-page-size');
+const usersTableBody = document.getElementById('users-table-body');
+const usersPrevButton = document.getElementById('users-prev-page');
+const usersNextButton = document.getElementById('users-next-page');
+const usersPageInfo = document.getElementById('users-page-info');
+const totalUsersEl = document.getElementById('total-users');
+const usersCurrentPageEl = document.getElementById('users-current-page');
+const usersTotalPagesEl = document.getElementById('users-total-pages');
+
+// Edit user modal elements
+const editUserModal = document.getElementById('edit-user-modal');
+const editUserForm = document.getElementById('edit-user-form');
+const editUserId = document.getElementById('edit-user-id');
+const editFirstName = document.getElementById('edit-first-name');
+const editLastName = document.getElementById('edit-last-name');
+const editEmail = document.getElementById('edit-email');
+const editUserError = document.getElementById('edit-user-error');
+const cancelEditBtn = document.getElementById('cancel-edit-btn');
 
 // Authentication Functions
 async function verifyToken() {
@@ -468,6 +503,256 @@ function escapeCSVField(field) {
   return String(field).replace(/"/g, '""');
 }
 
+// Tab switching
+function switchTab(view) {
+  currentView = view;
+
+  if (view === 'queries') {
+    queriesSection.classList.remove('hidden');
+    usersSection.classList.add('hidden');
+    tabQueries.style.background = '#2563eb';
+    tabQueries.style.color = 'white';
+    tabUsers.style.background = 'transparent';
+    tabUsers.style.color = '#4b5563';
+  } else if (view === 'users') {
+    queriesSection.classList.add('hidden');
+    usersSection.classList.remove('hidden');
+    tabUsers.style.background = '#2563eb';
+    tabUsers.style.color = 'white';
+    tabQueries.style.background = 'transparent';
+    tabQueries.style.color = '#4b5563';
+    fetchUsers();
+  }
+}
+
+// Fetch and display users
+async function fetchUsers() {
+  if (isUsersLoading || !authToken) return;
+
+  isUsersLoading = true;
+  usersTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">Loading...</td></tr>';
+
+  try {
+    const params = new URLSearchParams({
+      page: usersCurrentPage,
+      limit: usersPageSize.value,
+      search: usersSearchInput.value.trim(),
+      sortBy: usersSortField.value,
+      sortOrder: usersSortOrder.value
+    });
+
+    const response = await fetch(`/api/admin/users?${params}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('authToken');
+        authToken = null;
+        showAuth();
+        return;
+      }
+      throw new Error('Failed to fetch users');
+    }
+
+    const data = await response.json();
+
+    // Update pagination info
+    usersTotalPages = data.pagination.totalPages;
+    usersCurrentPageEl.textContent = usersCurrentPage;
+    usersTotalPagesEl.textContent = usersTotalPages;
+    totalUsersEl.textContent = data.pagination.total.toLocaleString();
+    usersPageInfo.textContent = `${usersCurrentPage} of ${usersTotalPages}`;
+
+    // Update pagination buttons
+    usersPrevButton.disabled = usersCurrentPage <= 1;
+    usersNextButton.disabled = usersCurrentPage >= usersTotalPages;
+
+    // Render table
+    renderUsersTable(data.data);
+
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    usersTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-red-600">Error loading data</td></tr>';
+  } finally {
+    isUsersLoading = false;
+  }
+}
+
+// Render users table
+function renderUsersTable(users) {
+  if (users.length === 0) {
+    usersTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">No users found</td></tr>';
+    return;
+  }
+
+  usersTableBody.innerHTML = users.map(user => {
+    const createdAt = user.created_at ? new Date(user.created_at).toLocaleString() : 'N/A';
+    const lastLogin = user.last_login ? new Date(user.last_login).toLocaleString() : 'Never';
+
+    return `
+      <tr class="hover:bg-gray-50">
+        <td class="px-2 py-2 text-sm">${user.id}</td>
+        <td class="px-2 py-2 text-sm">${user.first_name}</td>
+        <td class="px-2 py-2 text-sm">${user.last_name}</td>
+        <td class="px-2 py-2 text-sm">${user.email}</td>
+        <td class="px-2 py-2 text-xs whitespace-nowrap">${createdAt}</td>
+        <td class="px-2 py-2 text-xs whitespace-nowrap">${lastLogin}</td>
+        <td class="px-2 py-2 text-center whitespace-nowrap">
+          <button
+            class="edit-user-btn text-white px-3 py-1 rounded text-xs font-semibold"
+            style="background-color: #2563eb; margin-right: 4px;"
+            data-id="${user.id}"
+            data-firstname="${user.first_name}"
+            data-lastname="${user.last_name}"
+            data-email="${user.email}"
+            title="Edit user #${user.id}"
+          >
+            Edit
+          </button>
+          <button
+            class="delete-user-btn text-white px-3 py-1 rounded text-xs font-semibold"
+            style="background-color: #dc2626;"
+            data-id="${user.id}"
+            title="Delete user #${user.id}"
+          >
+            Delete
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // Add event listeners to edit and delete buttons
+  document.querySelectorAll('.edit-user-btn').forEach(btn => {
+    btn.addEventListener('click', handleEditUser);
+  });
+
+  document.querySelectorAll('.delete-user-btn').forEach(btn => {
+    btn.addEventListener('click', handleDeleteUser);
+  });
+}
+
+// Handle edit user
+function handleEditUser(event) {
+  const btn = event.target;
+  const id = btn.getAttribute('data-id');
+  const firstName = btn.getAttribute('data-firstname');
+  const lastName = btn.getAttribute('data-lastname');
+  const email = btn.getAttribute('data-email');
+
+  // Populate form
+  editUserId.value = id;
+  editFirstName.value = firstName;
+  editLastName.value = lastName;
+  editEmail.value = email;
+
+  // Show modal
+  editUserModal.classList.remove('hidden');
+  editUserModal.style.display = 'flex';
+  editUserError.style.display = 'none';
+}
+
+// Handle edit form submission
+editUserForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const id = editUserId.value;
+  const firstName = editFirstName.value;
+  const lastName = editLastName.value;
+  const email = editEmail.value;
+
+  try {
+    const response = await fetch(`/api/admin/users/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ firstName, lastName, email })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Close modal and refresh users
+      editUserModal.classList.add('hidden');
+      editUserModal.style.display = 'none';
+      await fetchUsers();
+    } else {
+      editUserError.textContent = data.error || 'Failed to update user';
+      editUserError.style.display = 'block';
+    }
+  } catch (error) {
+    console.error('Error updating user:', error);
+    editUserError.textContent = 'Network error. Please try again.';
+    editUserError.style.display = 'block';
+  }
+});
+
+// Cancel edit
+cancelEditBtn.addEventListener('click', () => {
+  editUserModal.classList.add('hidden');
+  editUserModal.style.display = 'none';
+});
+
+// Close modal when clicking outside
+editUserModal.addEventListener('click', (e) => {
+  if (e.target === editUserModal) {
+    editUserModal.classList.add('hidden');
+    editUserModal.style.display = 'none';
+  }
+});
+
+// Handle delete user
+async function handleDeleteUser(event) {
+  const btn = event.target;
+  const id = btn.getAttribute('data-id');
+
+  if (!confirm(`Are you sure you want to delete user #${id}?`)) {
+    return;
+  }
+
+  // Disable button during delete
+  btn.disabled = true;
+  btn.textContent = 'Deleting...';
+  btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+  try {
+    const response = await fetch(`/api/admin/users/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('authToken');
+        authToken = null;
+        showAuth();
+        return;
+      }
+
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to delete user');
+    }
+
+    // Refresh the table after successful deletion
+    await fetchUsers();
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    alert(error.message || 'Failed to delete user. Please try again.');
+
+    // Re-enable button on error
+    btn.disabled = false;
+    btn.textContent = 'Delete';
+    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+  }
+}
+
 // Event listeners for dashboard controls
 searchInput.addEventListener('input', debounce(() => {
   currentPage = 1;
@@ -504,6 +789,45 @@ nextButton.addEventListener('click', () => {
 });
 
 exportCsvBtn.addEventListener('click', exportToCSV);
+
+// Tab switching event listeners
+tabQueries.addEventListener('click', () => switchTab('queries'));
+tabUsers.addEventListener('click', () => switchTab('users'));
+
+// Users section event listeners
+usersSearchInput.addEventListener('input', debounce(() => {
+  usersCurrentPage = 1;
+  fetchUsers();
+}, 500));
+
+usersSortField.addEventListener('change', () => {
+  usersCurrentPage = 1;
+  fetchUsers();
+});
+
+usersSortOrder.addEventListener('change', () => {
+  usersCurrentPage = 1;
+  fetchUsers();
+});
+
+usersPageSize.addEventListener('change', () => {
+  usersCurrentPage = 1;
+  fetchUsers();
+});
+
+usersPrevButton.addEventListener('click', () => {
+  if (usersCurrentPage > 1) {
+    usersCurrentPage--;
+    fetchUsers();
+  }
+});
+
+usersNextButton.addEventListener('click', () => {
+  if (usersCurrentPage < usersTotalPages) {
+    usersCurrentPage++;
+    fetchUsers();
+  }
+});
 
 // Initial load - check authentication
 document.addEventListener('DOMContentLoaded', async () => {

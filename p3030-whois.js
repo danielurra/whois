@@ -202,6 +202,135 @@ app.delete('/api/admin/queries/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Get all users with pagination (Protected)
+app.get('/api/admin/users', authenticateToken, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+    const search = req.query.search || '';
+    const sortBy = req.query.sortBy || 'created_at';
+    const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+    // Validate sortBy to prevent SQL injection
+    const allowedSortFields = ['id', 'first_name', 'last_name', 'email', 'created_at', 'last_login'];
+    const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
+
+    // Build search query
+    let whereClause = '';
+    let queryParams = [];
+    if (search) {
+      whereClause = 'WHERE first_name LIKE ? OR last_name LIKE ? OR email LIKE ?';
+      const searchPattern = `%${search}%`;
+      queryParams = [searchPattern, searchPattern, searchPattern];
+    }
+
+    // Get total count for pagination
+    const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
+    const [countRows] = await db.execute(countQuery, queryParams);
+    const total = countRows[0].total;
+
+    // Get paginated results (exclude password_hash)
+    const dataQuery = `
+      SELECT id, first_name, last_name, email, created_at, last_login
+      FROM users
+      ${whereClause}
+      ORDER BY ${safeSortBy} ${sortOrder}
+      LIMIT ? OFFSET ?
+    `;
+    const [rows] = await db.execute(dataQuery, [...queryParams, limit, offset]);
+
+    res.json({
+      data: rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Update user by ID (Protected)
+app.put('/api/admin/users/:id', authenticateToken, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { firstName, lastName, email } = req.body;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    // Validate input
+    if (!firstName || !lastName || !email) {
+      return res.status(400).json({ error: 'First name, last name, and email are required' });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Check if email is already taken by another user
+    const [existingUsers] = await db.execute(
+      'SELECT id FROM users WHERE email = ? AND id != ?',
+      [email, id]
+    );
+
+    if (existingUsers.length > 0) {
+      return res.status(409).json({ error: 'Email already in use by another user' });
+    }
+
+    // Update the user
+    const [result] = await db.execute(
+      'UPDATE users SET first_name = ?, last_name = ?, email = ? WHERE id = ?',
+      [firstName, lastName, email, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'User updated successfully', id });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// Delete user by ID (Protected)
+app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    // Prevent deleting yourself (optional safety check)
+    if (req.user.id === id) {
+      return res.status(400).json({ error: 'Cannot delete your own account' });
+    }
+
+    // Delete the user
+    const [result] = await db.execute('DELETE FROM users WHERE id = ?', [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'User deleted successfully', id });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 // Serve static files from public directory
 app.use(express.static('public'));
 
