@@ -31,6 +31,7 @@ const pageInfo = document.getElementById('page-info');
 const totalQueriesEl = document.getElementById('total-queries');
 const currentPageEl = document.getElementById('current-page');
 const totalPagesEl = document.getElementById('total-pages');
+const exportCsvBtn = document.getElementById('export-csv-btn');
 
 // Authentication Functions
 async function verifyToken() {
@@ -355,6 +356,118 @@ async function handleDelete(event) {
   }
 }
 
+// Export to CSV function
+async function exportToCSV() {
+  const btn = exportCsvBtn;
+  const originalText = btn.textContent;
+
+  try {
+    // Disable button and show loading state
+    btn.disabled = true;
+    btn.textContent = 'Exporting...';
+    btn.style.opacity = '0.6';
+
+    // Fetch all data (without pagination) with current filters
+    const params = new URLSearchParams({
+      page: 1,
+      limit: 999999, // Get all records
+      search: searchInput.value.trim(),
+      sortBy: sortField.value,
+      sortOrder: sortOrder.value
+    });
+
+    const response = await fetch(`/api/admin/queries?${params}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('authToken');
+        authToken = null;
+        showAuth();
+        return;
+      }
+      throw new Error('Failed to fetch data for export');
+    }
+
+    const data = await response.json();
+
+    // Convert to CSV
+    const csvContent = convertToCSV(data.data);
+
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `whois-queries-${timestamp}.csv`;
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Clean up
+    URL.revokeObjectURL(url);
+
+  } catch (error) {
+    console.error('Error exporting CSV:', error);
+    alert('Failed to export CSV. Please try again.');
+  } finally {
+    // Re-enable button
+    btn.disabled = false;
+    btn.textContent = originalText;
+    btn.style.opacity = '1';
+  }
+}
+
+// Convert data to CSV format
+function convertToCSV(data) {
+  if (!data || data.length === 0) {
+    return 'No data to export';
+  }
+
+  // CSV headers
+  const headers = ['ID', 'Searched IP', 'Organization Name', 'Matched Logo', 'Visitor IP', 'WAN Panel', 'Date'];
+
+  // Create CSV rows
+  const rows = data.map(query => {
+    const date = new Date(query.created_at).toLocaleString();
+    return [
+      query.id,
+      query.searched_ip,
+      escapeCSVField(query.organization_name || ''),
+      query.matched_logo,
+      query.visitor_ip || '',
+      query.wan_panel || '',
+      date
+    ];
+  });
+
+  // Combine headers and rows
+  const csvArray = [headers, ...rows];
+
+  // Convert to CSV string
+  return csvArray.map(row =>
+    row.map(cell => `"${cell}"`).join(',')
+  ).join('\n');
+}
+
+// Escape CSV fields that contain special characters
+function escapeCSVField(field) {
+  if (field === null || field === undefined) {
+    return '';
+  }
+  // Convert to string and escape double quotes
+  return String(field).replace(/"/g, '""');
+}
+
 // Event listeners for dashboard controls
 searchInput.addEventListener('input', debounce(() => {
   currentPage = 1;
@@ -389,6 +502,8 @@ nextButton.addEventListener('click', () => {
     fetchQueries();
   }
 });
+
+exportCsvBtn.addEventListener('click', exportToCSV);
 
 // Initial load - check authentication
 document.addEventListener('DOMContentLoaded', async () => {
