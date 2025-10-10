@@ -34,3 +34,6 @@ build/
 # Temporary files
 *.tmp
 *.temp
+
+# Playwright MCP
+.playwright-mcp/
