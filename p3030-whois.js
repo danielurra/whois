@@ -226,14 +226,14 @@ app.get('/api/admin/users', authenticateToken, async (req, res) => {
     }
 
     // Get total count for pagination
-    const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
+    const countQuery = `SELECT COUNT(*) as total FROM reguser ${whereClause}`;
     const [countRows] = await db.execute(countQuery, queryParams);
     const total = countRows[0].total;
 
     // Get paginated results (exclude password_hash)
     const dataQuery = `
       SELECT id, first_name, last_name, email, created_at, last_login
-      FROM users
+      FROM reguser
       ${whereClause}
       ORDER BY ${safeSortBy} ${sortOrder}
       LIMIT ? OFFSET ?
@@ -278,7 +278,7 @@ app.put('/api/admin/users/:id', authenticateToken, async (req, res) => {
 
     // Check if email is already taken by another user
     const [existingUsers] = await db.execute(
-      'SELECT id FROM users WHERE email = ? AND id != ?',
+      'SELECT id FROM reguser WHERE email = ? AND id != ?',
       [email, id]
     );
 
@@ -288,7 +288,7 @@ app.put('/api/admin/users/:id', authenticateToken, async (req, res) => {
 
     // Update the user
     const [result] = await db.execute(
-      'UPDATE users SET first_name = ?, last_name = ?, email = ? WHERE id = ?',
+      'UPDATE reguser SET first_name = ?, last_name = ?, email = ? WHERE id = ?',
       [firstName, lastName, email, id]
     );
 
@@ -318,7 +318,7 @@ app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
     }
 
     // Delete the user
-    const [result] = await db.execute('DELETE FROM users WHERE id = ?', [id]);
+    const [result] = await db.execute('DELETE FROM reguser WHERE id = ?', [id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'User not found' });
@@ -329,6 +329,11 @@ app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Failed to delete user' });
   }
+});
+
+// Admin dashboard route
+app.get('/reguser', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'reguser.html'));
 });
 
 // Serve static files from public directory

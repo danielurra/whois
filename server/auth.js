@@ -48,7 +48,7 @@ export const register = async (req, res) => {
 
     // Check if user already exists
     const [existingUsers] = await db.execute(
-      'SELECT id FROM users WHERE email = ?',
+      'SELECT id FROM reguser WHERE email = ?',
       [email]
     );
 
@@ -62,7 +62,7 @@ export const register = async (req, res) => {
 
     // Insert new user
     const [result] = await db.execute(
-      'INSERT INTO users (first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?)',
+      'INSERT INTO reguser (first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?)',
       [firstName, lastName, email, passwordHash]
     );
 
@@ -101,7 +101,7 @@ export const login = async (req, res) => {
 
     // Find user
     const [users] = await db.execute(
-      'SELECT id, first_name, last_name, email, password_hash FROM users WHERE email = ?',
+      'SELECT id, first_name, last_name, email, password_hash FROM reguser WHERE email = ?',
       [email]
     );
 
@@ -119,7 +119,7 @@ export const login = async (req, res) => {
 
     // Update last login
     await db.execute(
-      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+      'UPDATE reguser SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
       [user.id]
     );
 

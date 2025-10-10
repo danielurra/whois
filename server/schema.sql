@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS whois_queries (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table to store admin users for authentication
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS reguser (
     id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
