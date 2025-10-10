@@ -94,6 +94,41 @@
 
   </div>
 
+  <!-- ISP Logo Carousel -->
+  <div class="carousel-container flex justify-center" style="margin-top: 57px;">
+    <div class="carousel-wrapper bg-white border border-gray-300 rounded-lg shadow-md" style="width: 100%; max-width: 792px; padding: 20px; overflow: hidden;">
+      <div class="carousel-track flex items-center" id="carousel-track" style="gap: 20px;">
+        <!-- Logos will be dynamically loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes scroll {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    .carousel-track {
+      animation: scroll 30s linear infinite;
+    }
+
+    .carousel-track:hover {
+      animation-play-state: paused;
+    }
+
+    .carousel-logo {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+  </style>
+
   <script src="javascript.js"></script>
 </body>
 
