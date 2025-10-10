@@ -15,7 +15,7 @@ async function createUser() {
 
     // Check if user already exists
     const [existingUsers] = await db.execute(
-      'SELECT id FROM users WHERE email = ?',
+      'SELECT id FROM reguser WHERE email = ?',
       [email]
     );
 
@@ -26,7 +26,7 @@ async function createUser() {
 
     // Insert new user
     const [result] = await db.execute(
-      'INSERT INTO users (first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?)',
+      'INSERT INTO reguser (first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?)',
       [firstName, lastName, email, passwordHash]
     );
 
