@@ -90,6 +90,40 @@ async function updateQueryCount() {
   }
 }
 
+// Initialize ISP logo carousel
+function initCarousel() {
+  const carouselTrack = document.getElementById("carousel-track");
+  if (!carouselTrack) return;
+
+  // List of ISP logos (excluding generic_logo.png) - showing top providers
+  const logos = [
+    "att.png",
+    "Comcast.png",
+    "Verizon.png",
+    "spectrum.png",
+    "Cox.png",
+    "fios.png"
+  ];
+
+  // Create logo elements (duplicate for seamless loop)
+  const createLogoSet = () => {
+    return logos.map(logo => {
+      const img = document.createElement("img");
+      img.src = `/img/us_isp_logos/${logo}`;
+      img.alt = logo.replace(".png", "");
+      img.className = "carousel-logo";
+      return img;
+    });
+  };
+
+  // Add two sets of logos for seamless infinite scroll
+  const firstSet = createLogoSet();
+  const secondSet = createLogoSet();
+
+  firstSet.forEach(img => carouselTrack.appendChild(img));
+  secondSet.forEach(img => carouselTrack.appendChild(img));
+}
+
 // Auto-focus the first input on page load
 document.addEventListener("DOMContentLoaded", function () {
   const firstInput = document.getElementById("ipAddress-WAN1");
@@ -97,4 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Update query count on page load
   updateQueryCount();
+
+  // Initialize carousel
+  initCarousel();
 });
