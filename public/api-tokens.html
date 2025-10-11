@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Token Management</title>
+  <link rel="icon" href="img/favicon.ico" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f9fafb;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    h1 {
+      font-size: 1.875rem;
+      font-weight: bold;
+      color: #111827;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+
+    .btn-secondary {
+      background: #6b7280;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #4b5563;
+    }
+
+    .btn-success {
+      background: #059669;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #047857;
+    }
+
+    .btn-small {
+      padding: 4px 12px;
+      font-size: 12px;
+    }
+
+    .tabs {
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .tab-btn {
+      padding: 8px 24px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      background: transparent;
+      color: #4b5563;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: #2563eb;
+      color: white;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #d1d5db;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: #4b5563;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.875rem;
+      font-weight: bold;
+    }
+
+    .stat-value.blue { color: #2563eb; }
+    .stat-value.green { color: #16a34a; }
+    .stat-value.purple { color: #9333ea; }
+    .stat-value.orange { color: #ea580c; }
+
+    .search-controls {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #f3f4f6;
+      border-bottom: 1px solid #d1d5db;
+    }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #374151;
+      text-transform: uppercase;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: #1f2937;
+    }
+
+    tbody tr:hover {
+      background: #f9fafb;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-inactive {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+
+    .badge-revoked {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-expired {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-suspended {
+      background: #fed7aa;
+      color: #9a3412;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      margin-bottom: 24px;
+    }
+
+    .modal-header h2 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #111827;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .error-message {
+      color: #dc2626;
+      font-size: 14px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .success-message {
+      color: #059669;
+      font-size: 14px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .token-display {
+      background: #f3f4f6;
+      border: 2px solid #2563eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+      font-family: 'Courier New', monospace;
+      word-break: break-all;
+      font-size: 14px;
+    }
+
+    .warning-box {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 16px 0;
+      font-size: 14px;
+      color: #92400e;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .token-preview {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 32px;
+      color: #6b7280;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .search-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      table {
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>API Token Management</h1>
+    <div class="header-buttons">
+      <span id="user-name" style="color: #4b5563; font-weight: 500;"></span>
+      <a href="/reguser" class="btn btn-secondary">Back to Dashboard</a>
+      <button id="logout-btn" class="btn btn-danger">Logout</button>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs">
+    <button id="tab-users" class="tab-btn active">API Users</button>
+    <button id="tab-tokens" class="tab-btn">API Tokens</button>
+  </div>
+
+  <!-- API Users Section -->
+  <div id="users-section">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total API Users</div>
+        <div class="stat-value blue" id="total-api-users">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Users</div>
+        <div class="stat-value green" id="active-users">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Tokens</div>
+        <div class="stat-value purple" id="total-tokens-stat">0</div>
+      </div>
+    </div>
+
+    <!-- Search and Controls -->
+    <div class="card">
+      <div class="card-header">
+        <h3>API Users</h3>
+        <button id="btn-add-user" class="btn btn-primary">Add New User</button>
+      </div>
+      <div class="card-body">
+        <div class="search-controls">
+          <div class="form-group">
+            <label for="users-search">Search</label>
+            <input type="text" id="users-search" placeholder="Search by name, email, or phone..." />
+          </div>
+          <div class="form-group" style="flex: 0 0 150px;">
+            <label for="users-sort">Sort By</label>
+            <select id="users-sort">
+              <option value="created_at">Date Created</option>
+              <option value="first_name">First Name</option>
+              <option value="last_name">Last Name</option>
+              <option value="email">Email</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 0 0 120px;">
+            <label for="users-order">Order</label>
+            <select id="users-order">
+              <option value="DESC">Descending</option>
+              <option value="ASC">Ascending</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Users Table -->
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Website</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr>
+                <td colspan="8" class="loading">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <button id="users-prev" class="btn btn-secondary" disabled>Previous</button>
+          <div id="users-page-info" style="font-size: 14px; color: #4b5563;">Page 1 of 1</div>
+          <button id="users-next" class="btn btn-secondary" disabled>Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Tokens Section -->
+  <div id="tokens-section" class="hidden">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Tokens</div>
+        <div class="stat-value blue" id="total-tokens">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Tokens</div>
+        <div class="stat-value green" id="active-tokens">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Expired/Revoked</div>
+        <div class="stat-value orange" id="inactive-tokens">0</div>
+      </div>
+    </div>
+
+    <!-- Search and Controls -->
+    <div class="card">
+      <div class="card-header">
+        <h3>API Tokens</h3>
+        <button id="btn-add-token" class="btn btn-primary">Generate New Token</button>
+      </div>
+      <div class="card-body">
+        <div class="search-controls">
+          <div class="form-group">
+            <label for="tokens-search">Search</label>
+            <input type="text" id="tokens-search" placeholder="Search by name, user email..." />
+          </div>
+          <div class="form-group" style="flex: 0 0 150px;">
+            <label for="tokens-status-filter">Status</label>
+            <select id="tokens-status-filter">
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="revoked">Revoked</option>
+              <option value="expired">Expired</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 0 0 150px;">
+            <label for="tokens-sort">Sort By</label>
+            <select id="tokens-sort">
+              <option value="created_at">Date Created</option>
+              <option value="name">Token Name</option>
+              <option value="user_email">User Email</option>
+              <option value="expires_at">Expiration</option>
+              <option value="status">Status</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 0 0 120px;">
+            <label for="tokens-order">Order</label>
+            <select id="tokens-order">
+              <option value="DESC">Descending</option>
+              <option value="ASC">Ascending</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tokens Table -->
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>User</th>
+                <th>Status</th>
+                <th>Rate Limit</th>
+                <th>Expires</th>
+                <th>Last Used</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tokens-table-body">
+              <tr>
+                <td colspan="8" class="loading">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <button id="tokens-prev" class="btn btn-secondary" disabled>Previous</button>
+          <div id="tokens-page-info" style="font-size: 14px; color: #4b5563;">Page 1 of 1</div>
+          <button id="tokens-next" class="btn btn-secondary" disabled>Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit User Modal -->
+  <div id="user-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="user-modal-title">Add New API User</h2>
+      </div>
+      <form id="user-form">
+        <input type="hidden" id="user-id" />
+        <div class="form-group">
+          <label for="user-first-name">First Name *</label>
+          <input type="text" id="user-first-name" required />
+        </div>
+        <div class="form-group">
+          <label for="user-last-name">Last Name *</label>
+          <input type="text" id="user-last-name" required />
+        </div>
+        <div class="form-group">
+          <label for="user-email">Email *</label>
+          <input type="email" id="user-email" required />
+        </div>
+        <div class="form-group">
+          <label for="user-phone">Phone</label>
+          <input type="tel" id="user-phone" />
+        </div>
+        <div class="form-group">
+          <label for="user-website">Website</label>
+          <input type="url" id="user-website" placeholder="https://example.com" />
+        </div>
+        <div class="form-group">
+          <label for="user-notes">Notes</label>
+          <textarea id="user-notes"></textarea>
+        </div>
+        <div id="user-status-group" class="form-group hidden">
+          <label for="user-status">Status</label>
+          <select id="user-status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </div>
+        <div id="user-error" class="error-message"></div>
+        <div class="modal-footer">
+          <button type="button" id="cancel-user-btn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Token Modal -->
+  <div id="token-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Generate New API Token</h2>
+      </div>
+      <form id="token-form">
+        <div class="form-group">
+          <label for="token-user">Select User *</label>
+          <select id="token-user" required>
+            <option value="">Loading users...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="token-name">Token Name *</label>
+          <input type="text" id="token-name" required placeholder="e.g., Production API Key" />
+        </div>
+        <div class="form-group">
+          <label for="token-expires">Expires In (Days)</label>
+          <input type="number" id="token-expires" min="0" placeholder="Leave empty for no expiration" />
+          <small style="color: #6b7280; font-size: 12px;">Set to 0 or leave empty for permanent token</small>
+        </div>
+        <div class="form-group">
+          <label for="token-rate-limit">Rate Limit (Requests/Hour)</label>
+          <input type="number" id="token-rate-limit" value="1000" min="1" required />
+        </div>
+        <div class="form-group">
+          <label for="token-scope">Scope</label>
+          <input type="text" id="token-scope" value="read" placeholder="read, write, admin" />
+          <small style="color: #6b7280; font-size: 12px;">Comma-separated permissions</small>
+        </div>
+        <div id="token-error" class="error-message"></div>
+        <div class="modal-footer">
+          <button type="button" id="cancel-token-btn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-success">Generate Token</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Token Generated Modal -->
+  <div id="token-generated-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Token Generated Successfully!</h2>
+      </div>
+      <div class="warning-box">
+        <strong>Important:</strong> This is the only time you will see this token. Please copy it now and store it securely.
+      </div>
+      <div class="token-display" id="generated-token-display"></div>
+      <button id="copy-token-btn" class="btn btn-primary" style="width: 100%;">Copy Token to Clipboard</button>
+      <div class="modal-footer">
+        <button id="close-token-generated-btn" class="btn btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="api-tokens.js"></script>
+</body>
+</html>

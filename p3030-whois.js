@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import db from './server/db.js';
 import { authenticateToken, register, login, verifyToken } from './server/auth.js';
+import * as apiTokenManager from './server/api-token-manager.js';
 
 // __dirname workaround in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -331,9 +332,223 @@ app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Admin dashboard route
+// ========== API TOKEN MANAGEMENT ENDPOINTS ==========
+
+// Get all API users (Protected)
+app.get('/api/admin/api-users', authenticateToken, async (req, res) => {
+  try {
+    const options = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 50,
+      search: req.query.search || '',
+      sortBy: req.query.sortBy || 'created_at',
+      sortOrder: req.query.sortOrder || 'DESC'
+    };
+
+    const result = await apiTokenManager.getApiUsers(options);
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching API users:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch API users' });
+  }
+});
+
+// Create new API user (Protected)
+app.post('/api/admin/api-users', authenticateToken, async (req, res) => {
+  try {
+    const { firstName, lastName, email, phone, website, notes } = req.body;
+    const createdBy = req.user.id;
+
+    const user = await apiTokenManager.createApiUser(
+      { firstName, lastName, email, phone, website, notes },
+      createdBy
+    );
+
+    res.status(201).json({ message: 'API user created successfully', user });
+  } catch (error) {
+    console.error('Error creating API user:', error);
+    const statusCode = error.message.includes('already exists') ? 409 : 400;
+    res.status(statusCode).json({ error: error.message || 'Failed to create API user' });
+  }
+});
+
+// Update API user (Protected)
+app.put('/api/admin/api-users/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { firstName, lastName, email, phone, website, notes, status } = req.body;
+
+    if (!userId || isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    await apiTokenManager.updateApiUser(userId, {
+      firstName, lastName, email, phone, website, notes, status
+    });
+
+    res.json({ message: 'API user updated successfully', id: userId });
+  } catch (error) {
+    console.error('Error updating API user:', error);
+    const statusCode = error.message.includes('not found') ? 404 :
+                       error.message.includes('already in use') ? 409 : 400;
+    res.status(statusCode).json({ error: error.message || 'Failed to update API user' });
+  }
+});
+
+// Delete API user (Protected)
+app.delete('/api/admin/api-users/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+
+    if (!userId || isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    await apiTokenManager.deleteApiUser(userId);
+    res.json({ message: 'API user deleted successfully', id: userId });
+  } catch (error) {
+    console.error('Error deleting API user:', error);
+    const statusCode = error.message.includes('not found') ? 404 : 500;
+    res.status(statusCode).json({ error: error.message || 'Failed to delete API user' });
+  }
+});
+
+// Get all API tokens (Protected)
+app.get('/api/admin/api-tokens', authenticateToken, async (req, res) => {
+  try {
+    const options = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 50,
+      search: req.query.search || '',
+      sortBy: req.query.sortBy || 'created_at',
+      sortOrder: req.query.sortOrder || 'DESC',
+      status: req.query.status || null
+    };
+
+    const result = await apiTokenManager.getAllTokens(options);
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching API tokens:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch API tokens' });
+  }
+});
+
+// Get tokens for a specific user (Protected)
+app.get('/api/admin/api-users/:userId/tokens', authenticateToken, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    if (!userId || isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    const tokens = await apiTokenManager.getUserTokens(userId);
+    res.json({ tokens });
+  } catch (error) {
+    console.error('Error fetching user tokens:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch user tokens' });
+  }
+});
+
+// Create new API token (Protected)
+app.post('/api/admin/api-tokens', authenticateToken, async (req, res) => {
+  try {
+    const { userId, name, expiresInDays, rateLimit, scope, ipWhitelist } = req.body;
+    const createdBy = req.user.id;
+
+    if (!userId || !name) {
+      return res.status(400).json({ error: 'User ID and token name are required' });
+    }
+
+    const tokenData = await apiTokenManager.createApiToken({
+      userId,
+      name,
+      expiresInDays: expiresInDays || null,
+      rateLimit: rateLimit || 1000,
+      scope: scope || 'read',
+      ipWhitelist: ipWhitelist || null,
+      createdBy
+    });
+
+    // WARNING: The token is returned here only once!
+    res.status(201).json({
+      message: 'API token created successfully. Save this token - it will not be shown again!',
+      token: tokenData
+    });
+  } catch (error) {
+    console.error('Error creating API token:', error);
+    const statusCode = error.message.includes('not found') ? 404 : 400;
+    res.status(statusCode).json({ error: error.message || 'Failed to create API token' });
+  }
+});
+
+// Revoke API token (Protected)
+app.put('/api/admin/api-tokens/:id/revoke', authenticateToken, async (req, res) => {
+  try {
+    const tokenId = parseInt(req.params.id);
+    const { reason } = req.body;
+    const revokedBy = req.user.id;
+
+    if (!tokenId || isNaN(tokenId)) {
+      return res.status(400).json({ error: 'Invalid token ID' });
+    }
+
+    await apiTokenManager.revokeApiToken(tokenId, revokedBy, reason);
+    res.json({ message: 'Token revoked successfully', id: tokenId });
+  } catch (error) {
+    console.error('Error revoking token:', error);
+    const statusCode = error.message.includes('not found') ? 404 : 500;
+    res.status(statusCode).json({ error: error.message || 'Failed to revoke token' });
+  }
+});
+
+// Update token status (Protected)
+app.put('/api/admin/api-tokens/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const tokenId = parseInt(req.params.id);
+    const { status } = req.body;
+
+    if (!tokenId || isNaN(tokenId)) {
+      return res.status(400).json({ error: 'Invalid token ID' });
+    }
+
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+
+    await apiTokenManager.updateTokenStatus(tokenId, status);
+    res.json({ message: 'Token status updated successfully', id: tokenId, status });
+  } catch (error) {
+    console.error('Error updating token status:', error);
+    res.status(400).json({ error: error.message || 'Failed to update token status' });
+  }
+});
+
+// Delete API token (Protected)
+app.delete('/api/admin/api-tokens/:id', authenticateToken, async (req, res) => {
+  try {
+    const tokenId = parseInt(req.params.id);
+
+    if (!tokenId || isNaN(tokenId)) {
+      return res.status(400).json({ error: 'Invalid token ID' });
+    }
+
+    await apiTokenManager.deleteApiToken(tokenId);
+    res.json({ message: 'Token deleted successfully', id: tokenId });
+  } catch (error) {
+    console.error('Error deleting token:', error);
+    const statusCode = error.message.includes('not found') ? 404 : 500;
+    res.status(statusCode).json({ error: error.message || 'Failed to delete token' });
+  }
+});
+
+// Admin dashboard routes
 app.get('/reguser', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'reguser.html'));
+});
+
+app.get('/api-tokens', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'api-tokens.html'));
 });
 
 // Serve static files from public directory
