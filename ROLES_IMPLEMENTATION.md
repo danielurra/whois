@@ -32,8 +32,8 @@ CREATE INDEX idx_reguser_role ON reguser(role);
 ```
 
 **User Assignments**:
-- `amigo@amigo.com` → Top Gun
-- `etaba@etaba.com` → Webapp Admin
+- `admin@example.com` → Top Gun
+- `user@example.com` → Webapp Admin
 
 ### Backend Changes
 
@@ -81,12 +81,12 @@ Protected all API Token Management endpoints with `requireTopGun` middleware:
 
 To test the role system:
 
-1. **Top Gun User** (amigo@amigo.com):
+1. **Top Gun User** (admin@example.com):
    - Can see "API Tokens" button in Admin Dashboard
    - Can access `/api-tokens` page
    - See purple "⭐ TOP GUN" badge
 
-2. **Webapp Admin User** (etaba@etaba.com):
+2. **Webapp Admin User** (user@example.com):
    - Cannot see "API Tokens" button
    - Gets denied access if trying to access `/api-tokens` directly
    - No badge displayed
