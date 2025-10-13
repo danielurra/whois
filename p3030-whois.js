@@ -7,6 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import bcrypt from 'bcrypt';
 import db from './server/db.js';
 import { authenticateToken, register, login, verifyToken, requireTopGun, requireWritePermission } from './server/auth.js';
 import * as apiTokenManager from './server/api-token-manager.js';
@@ -26,6 +27,64 @@ app.post('/api/auth/register', register);
 app.post('/api/auth/login', login);
 app.get('/api/auth/verify', authenticateToken, verifyToken);
 
+// Change password route
+app.post('/api/auth/change-password', authenticateToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    // Validate new password requirements
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
+    // Check for at least one letter and one number
+    const hasLetter = /[a-zA-Z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+
+    if (!hasLetter || !hasNumber) {
+      return res.status(400).json({ error: 'Password must contain both letters and numbers' });
+    }
+
+    // Get user from database
+    const [users] = await db.execute(
+      'SELECT password_hash FROM reguser WHERE id = ?',
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = users[0];
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    await db.execute(
+      'UPDATE reguser SET password_hash = ? WHERE id = ?',
+      [newPasswordHash, userId]
+    );
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+});
 
 // ISP logo folder
 // const logoFolder = '/var/www/whois.ciscoar.com/public/img/us_isp_logos';
@@ -260,7 +319,7 @@ app.get('/api/admin/users', authenticateToken, async (req, res) => {
 app.put('/api/admin/users/:id', authenticateToken, requireWritePermission, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const { firstName, lastName, email } = req.body;
+    const { firstName, lastName, email, password } = req.body;
 
     if (!id || isNaN(id)) {
       return res.status(400).json({ error: 'Invalid user ID' });
@@ -277,6 +336,21 @@ app.put('/api/admin/users/:id', authenticateToken, requireWritePermission, async
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
+    // Validate password if provided
+    if (password) {
+      if (password.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+      }
+
+      // Check for at least one letter and one number
+      const hasLetter = /[a-zA-Z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+
+      if (!hasLetter || !hasNumber) {
+        return res.status(400).json({ error: 'Password must contain both letters and numbers' });
+      }
+    }
+
     // Check if email is already taken by another user
     const [existingUsers] = await db.execute(
       'SELECT id FROM reguser WHERE email = ? AND id != ?',
@@ -287,11 +361,24 @@ app.put('/api/admin/users/:id', authenticateToken, requireWritePermission, async
       return res.status(409).json({ error: 'Email already in use by another user' });
     }
 
-    // Update the user
-    const [result] = await db.execute(
-      'UPDATE reguser SET first_name = ?, last_name = ?, email = ? WHERE id = ?',
-      [firstName, lastName, email, id]
-    );
+    // Update the user with or without password
+    let result;
+    if (password) {
+      // Hash the new password
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(password, salt);
+
+      [result] = await db.execute(
+        'UPDATE reguser SET first_name = ?, last_name = ?, email = ?, password_hash = ? WHERE id = ?',
+        [firstName, lastName, email, passwordHash, id]
+      );
+    } else {
+      // Update without changing password
+      [result] = await db.execute(
+        'UPDATE reguser SET first_name = ?, last_name = ?, email = ? WHERE id = ?',
+        [firstName, lastName, email, id]
+      );
+    }
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'User not found' });

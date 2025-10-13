@@ -48,9 +48,17 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format.' });
     }
 
-    // Validate password length
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    // Validate password requirements
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+    }
+
+    // Check for at least one letter and one number
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    if (!hasLetter || !hasNumber) {
+      return res.status(400).json({ error: 'Password must contain both letters and numbers.' });
     }
 
     // Check if user already exists
@@ -67,15 +75,15 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Insert new user (default role is 'Webapp Admin')
+    // Insert new user (default role is 'Read Only Admin')
     const [result] = await db.execute(
       'INSERT INTO reguser (first_name, last_name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
-      [firstName, lastName, email, passwordHash, 'Webapp Admin']
+      [firstName, lastName, email, passwordHash, 'Read Only Admin']
     );
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: result.insertId, email, firstName, lastName, role: 'Webapp Admin' },
+      { id: result.insertId, email, firstName, lastName, role: 'Read Only Admin' },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
@@ -88,7 +96,7 @@ export const register = async (req, res) => {
         firstName,
         lastName,
         email,
-        role: 'Webapp Admin'
+        role: 'Read Only Admin'
       }
     });
   } catch (error) {

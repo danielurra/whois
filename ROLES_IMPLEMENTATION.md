@@ -29,14 +29,15 @@ This document describes the implementation of a comprehensive role-based access 
 ### Read Only Admin
 - **Access Level**: View-only administrative access
 - **Permissions**:
-  - Read-only access to Admin Dashboard (Queries and Users)
-  - Can view queries and users
+  - Read-only access to Admin Dashboard (Queries only)
+  - Can view queries
   - Cannot edit or delete queries
-  - Cannot edit or delete users
+  - Cannot access Users tab/section
   - Cannot access API Token Management
   - Cannot access Role Management
   - Cannot change user roles
 - **Badge**: Displays a yellow badge with amber text
+- **Note**: This is the default role assigned to newly registered users
 
 ## Implementation Details
 
@@ -112,6 +113,7 @@ CREATE INDEX idx_role_audit_created_at ON role_audit(created_at);
 #### 1. Admin Dashboard (`public/reguser.html` & `public/admin.js`)
 - Added "Role Management" link in navigation (purple button)
 - Shows/hides "Role Management" and "API Tokens" links based on user role (Top Gun only)
+- Shows/hides "Users" tab based on user role (hidden for Read Only Admin)
 - Displays role badges for all users in the Users table:
   - **Top Gun**: Purple gradient badge
   - **Webapp Admin**: Blue badge
@@ -176,6 +178,7 @@ CREATE INDEX idx_role_audit_created_at ON role_audit(created_at);
    - Edit/Delete buttons disabled for Read Only Admin users
    - Role Management link only visible to Top Gun users
    - API Tokens link only visible to Top Gun users
+   - Users tab only visible to Top Gun and Webapp Admin users
 
 3. **Page Access**:
    - API Tokens page redirects non-Top Gun users
@@ -186,7 +189,7 @@ CREATE INDEX idx_role_audit_created_at ON role_audit(created_at);
    - All role changes are logged in the audit table
    - Role changes include who made the change and optional reason
 
-5. **Default Role**: New users automatically assigned "Webapp Admin" role
+5. **Default Role**: New users automatically assigned "Read Only Admin" role
 
 ## Testing
 
@@ -207,10 +210,11 @@ To test the role system:
    - No badge displayed
 
 3. **Read Only Admin User**:
-   - Cannot see "Role Management" or "API Tokens" buttons
-   - Can view queries and users but cannot edit or delete
-   - Edit/Delete buttons are disabled with "Read-only access" tooltip
+   - Cannot see "Role Management", "API Tokens", or "Users" tab
+   - Can view queries but cannot edit or delete
+   - Delete buttons are disabled with "Read-only access" tooltip
    - See yellow/amber "READ ONLY ADMIN" badge
+   - This is the default role for new user registrations
 
 ## Role Audit Logging
 

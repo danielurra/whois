@@ -42,8 +42,10 @@ const exportCsvBtn = document.getElementById('export-csv-btn');
 // Tab elements
 const tabQueries = document.getElementById('tab-queries');
 const tabUsers = document.getElementById('tab-users');
+const tabChangePassword = document.getElementById('tab-change-password');
 const queriesSection = document.getElementById('queries-section');
 const usersSection = document.getElementById('users-section');
+const changePasswordSection = document.getElementById('change-password-section');
 
 // Users section elements
 const usersSearchInput = document.getElementById('users-search-input');
@@ -65,8 +67,21 @@ const editUserId = document.getElementById('edit-user-id');
 const editFirstName = document.getElementById('edit-first-name');
 const editLastName = document.getElementById('edit-last-name');
 const editEmail = document.getElementById('edit-email');
+const editPassword = document.getElementById('edit-password');
+const editPasswordConfirm = document.getElementById('edit-password-confirm');
 const editUserError = document.getElementById('edit-user-error');
 const cancelEditBtn = document.getElementById('cancel-edit-btn');
+
+// Change password elements
+const changePasswordForm = document.getElementById('change-password-form');
+const currentPasswordInput = document.getElementById('current-password');
+const newPasswordInput = document.getElementById('new-password');
+const confirmNewPasswordInput = document.getElementById('confirm-new-password');
+const passwordStrengthBar = document.getElementById('password-strength-bar');
+const passwordStrengthText = document.getElementById('password-strength-text');
+const changePasswordError = document.getElementById('change-password-error');
+const changePasswordSuccess = document.getElementById('change-password-success');
+const cancelPasswordChangeBtn = document.getElementById('cancel-password-change-btn');
 
 // Authentication Functions
 async function verifyToken() {
@@ -145,6 +160,28 @@ registerForm.addEventListener('submit', async (e) => {
   const lastName = document.getElementById('register-lastname').value;
   const email = document.getElementById('register-email').value;
   const password = document.getElementById('register-password').value;
+  const passwordConfirm = document.getElementById('register-password-confirm').value;
+
+  // Validate passwords match
+  if (password !== passwordConfirm) {
+    showError('register-error', 'Passwords do not match');
+    return;
+  }
+
+  // Validate password length
+  if (password.length < 8) {
+    showError('register-error', 'Password must be at least 8 characters long');
+    return;
+  }
+
+  // Validate password contains letters and numbers
+  const hasLetter = /[a-zA-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+
+  if (!hasLetter || !hasNumber) {
+    showError('register-error', 'Password must contain both letters and numbers');
+    return;
+  }
 
   try {
     const response = await fetch('/api/auth/register', {
@@ -248,6 +285,16 @@ function showDashboard() {
         apiTokensLink.style.display = 'inline-block';
       } else {
         apiTokensLink.style.display = 'none';
+      }
+    }
+
+    // Show/hide Users tab based on role
+    const usersTabButton = document.getElementById('tab-users');
+    if (usersTabButton) {
+      if (currentUser.role === 'Read Only Admin') {
+        usersTabButton.style.display = 'none';
+      } else {
+        usersTabButton.style.display = 'inline-block';
       }
     }
   }
@@ -538,22 +585,151 @@ function escapeCSVField(field) {
 function switchTab(view) {
   currentView = view;
 
+  // Hide all sections
+  queriesSection.classList.add('hidden');
+  usersSection.classList.add('hidden');
+  changePasswordSection.classList.add('hidden');
+
+  // Reset all tab styles
+  tabQueries.style.background = 'transparent';
+  tabQueries.style.color = '#4b5563';
+  tabUsers.style.background = 'transparent';
+  tabUsers.style.color = '#4b5563';
+  tabChangePassword.style.background = 'transparent';
+  tabChangePassword.style.color = '#4b5563';
+
   if (view === 'queries') {
     queriesSection.classList.remove('hidden');
-    usersSection.classList.add('hidden');
     tabQueries.style.background = '#2563eb';
     tabQueries.style.color = 'white';
-    tabUsers.style.background = 'transparent';
-    tabUsers.style.color = '#4b5563';
   } else if (view === 'users') {
-    queriesSection.classList.add('hidden');
     usersSection.classList.remove('hidden');
     tabUsers.style.background = '#2563eb';
     tabUsers.style.color = 'white';
-    tabQueries.style.background = 'transparent';
-    tabQueries.style.color = '#4b5563';
     fetchUsers();
+  } else if (view === 'change-password') {
+    changePasswordSection.classList.remove('hidden');
+    tabChangePassword.style.background = '#2563eb';
+    tabChangePassword.style.color = 'white';
+    // Clear form when opening
+    changePasswordForm.reset();
+    passwordStrengthBar.style.width = '0%';
+    passwordStrengthText.textContent = '-';
+    changePasswordError.style.display = 'none';
+    changePasswordSuccess.style.display = 'none';
   }
+}
+
+// Calculate password strength
+function calculatePasswordStrength(password) {
+  if (!password) {
+    return { score: 0, width: 0, color: '#d1d5db', text: '-' };
+  }
+
+  let score = 0;
+  const checks = {
+    length: false,
+    lowercase: false,
+    uppercase: false,
+    numbers: false,
+    special: false,
+    longLength: false
+  };
+
+  // Length checks
+  if (password.length >= 8) {
+    score += 20;
+    checks.length = true;
+  }
+  if (password.length >= 12) {
+    score += 10;
+    checks.longLength = true;
+  }
+  if (password.length >= 16) {
+    score += 10;
+  }
+
+  // Character variety checks
+  if (/[a-z]/.test(password)) {
+    score += 15;
+    checks.lowercase = true;
+  }
+  if (/[A-Z]/.test(password)) {
+    score += 15;
+    checks.uppercase = true;
+  }
+  if (/[0-9]/.test(password)) {
+    score += 15;
+    checks.numbers = true;
+  }
+  if (/[^a-zA-Z0-9]/.test(password)) {
+    score += 15;
+    checks.special = true;
+  }
+
+  // Bonus points for having all character types
+  const varietyCount = [checks.lowercase, checks.uppercase, checks.numbers, checks.special].filter(Boolean).length;
+  if (varietyCount >= 3) {
+    score += 10;
+  }
+  if (varietyCount === 4) {
+    score += 10;
+  }
+
+  // Penalties for common patterns
+  if (/^[0-9]+$/.test(password)) {
+    score -= 20; // Only numbers
+  }
+  if (/^[a-zA-Z]+$/.test(password)) {
+    score -= 10; // Only letters
+  }
+  if (/(.)\1{2,}/.test(password)) {
+    score -= 10; // Repeated characters
+  }
+  if (/^(12345|password|qwerty|abc123)/i.test(password)) {
+    score -= 30; // Common patterns
+  }
+
+  // Ensure score is between 0 and 100
+  score = Math.max(0, Math.min(100, score));
+
+  // Determine color and text based on score
+  let color, text, width;
+
+  if (score < 30) {
+    color = '#ef4444'; // Red
+    text = 'Weak';
+    width = score;
+  } else if (score < 50) {
+    color = '#f97316'; // Orange
+    text = 'Fair';
+    width = score;
+  } else if (score < 70) {
+    color = '#eab308'; // Yellow
+    text = 'Good';
+    width = score;
+  } else if (score < 85) {
+    color = '#84cc16'; // Light green
+    text = 'Strong';
+    width = score;
+  } else {
+    color = '#22c55e'; // Green
+    text = 'Excellent';
+    width = score;
+  }
+
+  return { score, width, color, text };
+}
+
+// Update password strength indicator
+function updatePasswordStrength() {
+  const password = newPasswordInput.value;
+  const strength = calculatePasswordStrength(password);
+
+  passwordStrengthBar.style.width = strength.width + '%';
+  passwordStrengthBar.style.background = strength.color;
+  passwordStrengthText.textContent = strength.text;
+  passwordStrengthText.style.color = strength.color;
 }
 
 // Fetch and display users
@@ -703,6 +879,10 @@ function handleEditUser(event) {
   editLastName.value = lastName;
   editEmail.value = email;
 
+  // Clear password fields
+  editPassword.value = '';
+  editPasswordConfirm.value = '';
+
   // Show modal
   editUserModal.classList.remove('hidden');
   editUserModal.style.display = 'flex';
@@ -717,15 +897,50 @@ editUserForm.addEventListener('submit', async (e) => {
   const firstName = editFirstName.value;
   const lastName = editLastName.value;
   const email = editEmail.value;
+  const password = editPassword.value;
+  const passwordConfirm = editPasswordConfirm.value;
+
+  // Validate password fields if password is provided
+  if (password || passwordConfirm) {
+    if (password !== passwordConfirm) {
+      editUserError.textContent = 'Passwords do not match';
+      editUserError.style.display = 'block';
+      return;
+    }
+    if (password.length < 8) {
+      editUserError.textContent = 'Password must be at least 8 characters long';
+      editUserError.style.display = 'block';
+      return;
+    }
+
+    // Validate password contains letters and numbers
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    if (!hasLetter || !hasNumber) {
+      editUserError.textContent = 'Password must contain both letters and numbers';
+      editUserError.style.display = 'block';
+      return;
+    }
+  }
+
+  // Hide error before submission
+  editUserError.style.display = 'none';
 
   try {
+    const updateData = { firstName, lastName, email };
+    // Only include password if it was provided
+    if (password) {
+      updateData.password = password;
+    }
+
     const response = await fetch(`/api/admin/users/${id}`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ firstName, lastName, email })
+      body: JSON.stringify(updateData)
     });
 
     const data = await response.json();
@@ -847,6 +1062,86 @@ exportCsvBtn.addEventListener('click', exportToCSV);
 // Tab switching event listeners
 tabQueries.addEventListener('click', () => switchTab('queries'));
 tabUsers.addEventListener('click', () => switchTab('users'));
+tabChangePassword.addEventListener('click', () => switchTab('change-password'));
+
+// Change password event listeners
+newPasswordInput.addEventListener('input', updatePasswordStrength);
+
+cancelPasswordChangeBtn.addEventListener('click', () => {
+  switchTab('queries');
+});
+
+changePasswordForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const currentPassword = currentPasswordInput.value;
+  const newPassword = newPasswordInput.value;
+  const confirmNewPassword = confirmNewPasswordInput.value;
+
+  // Hide previous messages
+  changePasswordError.style.display = 'none';
+  changePasswordSuccess.style.display = 'none';
+
+  // Validate passwords match
+  if (newPassword !== confirmNewPassword) {
+    changePasswordError.textContent = 'New passwords do not match';
+    changePasswordError.style.display = 'block';
+    return;
+  }
+
+  // Validate minimum length
+  if (newPassword.length < 8) {
+    changePasswordError.textContent = 'Password must be at least 8 characters long';
+    changePasswordError.style.display = 'block';
+    return;
+  }
+
+  // Validate password contains letters and numbers
+  const hasLetter = /[a-zA-Z]/.test(newPassword);
+  const hasNumber = /[0-9]/.test(newPassword);
+
+  if (!hasLetter || !hasNumber) {
+    changePasswordError.textContent = 'Password must contain both letters and numbers';
+    changePasswordError.style.display = 'block';
+    return;
+  }
+
+  // Validate new password is different from current
+  if (newPassword === currentPassword) {
+    changePasswordError.textContent = 'New password must be different from current password';
+    changePasswordError.style.display = 'block';
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/auth/change-password', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      changePasswordSuccess.textContent = 'Password changed successfully!';
+      changePasswordSuccess.style.display = 'block';
+      changePasswordForm.reset();
+      passwordStrengthBar.style.width = '0%';
+      passwordStrengthText.textContent = '-';
+      passwordStrengthText.style.color = '#6b7280';
+    } else {
+      changePasswordError.textContent = data.error || 'Failed to change password';
+      changePasswordError.style.display = 'block';
+    }
+  } catch (error) {
+    console.error('Error changing password:', error);
+    changePasswordError.textContent = 'Network error. Please try again.';
+    changePasswordError.style.display = 'block';
+  }
+});
 
 // Users section event listeners
 usersSearchInput.addEventListener('input', debounce(() => {
