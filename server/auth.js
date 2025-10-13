@@ -3,9 +3,16 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import db from './db.js';
 
-// JWT secret (in production, use environment variable)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
+// JWT secret - MUST be set in environment variables
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '24h';
+
+// Security check: Ensure JWT_SECRET is configured
+if (!JWT_SECRET) {
+  console.error('CRITICAL ERROR: JWT_SECRET is not set in environment variables!');
+  console.error('Please add JWT_SECRET to server/.env file.');
+  process.exit(1);
+}
 
 // Middleware to verify JWT token
 export const authenticateToken = (req, res, next) => {
@@ -60,15 +67,15 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Insert new user
+    // Insert new user (default role is 'Webapp Admin')
     const [result] = await db.execute(
-      'INSERT INTO reguser (first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?)',
-      [firstName, lastName, email, passwordHash]
+      'INSERT INTO reguser (first_name, last_name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
+      [firstName, lastName, email, passwordHash, 'Webapp Admin']
     );
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: result.insertId, email, firstName, lastName },
+      { id: result.insertId, email, firstName, lastName, role: 'Webapp Admin' },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
@@ -80,7 +87,8 @@ export const register = async (req, res) => {
         id: result.insertId,
         firstName,
         lastName,
-        email
+        email,
+        role: 'Webapp Admin'
       }
     });
   } catch (error) {
@@ -101,7 +109,7 @@ export const login = async (req, res) => {
 
     // Find user
     const [users] = await db.execute(
-      'SELECT id, first_name, last_name, email, password_hash FROM reguser WHERE email = ?',
+      'SELECT id, first_name, last_name, email, password_hash, role FROM reguser WHERE email = ?',
       [email]
     );
 
@@ -129,7 +137,8 @@ export const login = async (req, res) => {
         id: user.id,
         email: user.email,
         firstName: user.first_name,
-        lastName: user.last_name
+        lastName: user.last_name,
+        role: user.role || 'Webapp Admin'
       },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
@@ -142,7 +151,8 @@ export const login = async (req, res) => {
         id: user.id,
         firstName: user.first_name,
         lastName: user.last_name,
-        email: user.email
+        email: user.email,
+        role: user.role || 'Webapp Admin'
       }
     });
   } catch (error) {
@@ -157,4 +167,12 @@ export const verifyToken = (req, res) => {
     valid: true,
     user: req.user
   });
+};
+
+// Middleware to check for Top Gun role
+export const requireTopGun = (req, res, next) => {
+  if (!req.user || req.user.role !== 'Top Gun') {
+    return res.status(403).json({ error: 'Access denied. Top Gun role required.' });
+  }
+  next();
 };

@@ -218,13 +218,15 @@
 
   <!-- Dashboard Section (Hidden by default) -->
   <div id="dashboard-section" class="max-w-7xl mx-auto hidden" style="background: #f9fafb; padding: 24px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
       <h1 style="font-size: 1.875rem; font-weight: bold;">Admin Dashboard</h1>
       <div style="display: flex; gap: 8px;">
-        <span id="user-name" style="color: #4b5563;"></span>
         <button id="logout-btn" style="background: #dc2626; color: white; padding: 8px 16px; border-radius: 4px; border: none; cursor: pointer;">Logout</button>
         <a href="/" style="background: #2563eb; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none;">Back to Home</a>
       </div>
+    </div>
+    <div style="margin-bottom: 24px;">
+      <span style="color: #4b5563;"><strong>logged as:</strong> <span id="user-name"></span></span>
     </div>
 
     <!-- Navigation Tabs -->

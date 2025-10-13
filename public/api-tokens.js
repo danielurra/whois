@@ -11,7 +11,7 @@ let allUsers = [];
 // Get auth token
 const getAuthToken = () => localStorage.getItem('authToken');
 
-// Check authentication
+// Check authentication and Top Gun role
 const checkAuth = async () => {
   const token = getAuthToken();
   if (!token) {
@@ -31,7 +31,18 @@ const checkAuth = async () => {
     }
 
     const data = await response.json();
-    document.getElementById('user-name').textContent = `${data.user.firstName} ${data.user.lastName}`;
+
+    // Check if user has Top Gun role
+    if (data.user.role !== 'Top Gun') {
+      alert('Access denied. Top Gun role required to access API Token Management.');
+      window.location.href = '/reguser';
+      return false;
+    }
+
+    // Display user name with Top Gun badge
+    const userNameEl = document.getElementById('user-name');
+    userNameEl.innerHTML = `${data.user.firstName} ${data.user.lastName} <span style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px; vertical-align: middle;">⭐ TOP GUN</span>`;
+
     return true;
   } catch (error) {
     console.error('Auth check failed:', error);

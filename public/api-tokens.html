@@ -417,12 +417,16 @@
 </head>
 <body>
   <!-- Header -->
-  <div class="header">
-    <h1>API Token Management</h1>
-    <div class="header-buttons">
-      <span id="user-name" style="color: #4b5563; font-weight: 500;"></span>
-      <a href="/reguser" class="btn btn-secondary">Back to Dashboard</a>
-      <button id="logout-btn" class="btn btn-danger">Logout</button>
+  <div class="header" style="flex-direction: column; align-items: flex-start;">
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 8px;">
+      <h1>API Token Management</h1>
+      <div class="header-buttons">
+        <a href="/reguser" class="btn btn-secondary">Back to Dashboard</a>
+        <button id="logout-btn" class="btn btn-danger">Logout</button>
+      </div>
+    </div>
+    <div>
+      <span style="color: #4b5563;"><strong>logged as:</strong> <span id="user-name" style="font-weight: 500;"></span></span>
     </div>
   </div>
 

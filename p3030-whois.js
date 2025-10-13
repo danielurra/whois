@@ -8,7 +8,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import db from './server/db.js';
-import { authenticateToken, register, login, verifyToken } from './server/auth.js';
+import { authenticateToken, register, login, verifyToken, requireTopGun } from './server/auth.js';
 import * as apiTokenManager from './server/api-token-manager.js';
 
 // __dirname workaround in ESM
@@ -332,10 +332,10 @@ app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// ========== API TOKEN MANAGEMENT ENDPOINTS ==========
+// ========== API TOKEN MANAGEMENT ENDPOINTS (Top Gun Only) ==========
 
-// Get all API users (Protected)
-app.get('/api/admin/api-users', authenticateToken, async (req, res) => {
+// Get all API users (Protected - Top Gun only)
+app.get('/api/admin/api-users', authenticateToken, requireTopGun, async (req, res) => {
   try {
     const options = {
       page: parseInt(req.query.page) || 1,
@@ -353,8 +353,8 @@ app.get('/api/admin/api-users', authenticateToken, async (req, res) => {
   }
 });
 
-// Create new API user (Protected)
-app.post('/api/admin/api-users', authenticateToken, async (req, res) => {
+// Create new API user (Protected - Top Gun only)
+app.post('/api/admin/api-users', authenticateToken, requireTopGun, async (req, res) => {
   try {
     const { firstName, lastName, email, phone, website, notes } = req.body;
     const createdBy = req.user.id;
@@ -372,8 +372,8 @@ app.post('/api/admin/api-users', authenticateToken, async (req, res) => {
   }
 });
 
-// Update API user (Protected)
-app.put('/api/admin/api-users/:id', authenticateToken, async (req, res) => {
+// Update API user (Protected - Top Gun only)
+app.put('/api/admin/api-users/:id', authenticateToken, requireTopGun, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const { firstName, lastName, email, phone, website, notes, status } = req.body;
@@ -395,8 +395,8 @@ app.put('/api/admin/api-users/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Delete API user (Protected)
-app.delete('/api/admin/api-users/:id', authenticateToken, async (req, res) => {
+// Delete API user (Protected - Top Gun only)
+app.delete('/api/admin/api-users/:id', authenticateToken, requireTopGun, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
 
@@ -413,8 +413,8 @@ app.delete('/api/admin/api-users/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Get all API tokens (Protected)
-app.get('/api/admin/api-tokens', authenticateToken, async (req, res) => {
+// Get all API tokens (Protected - Top Gun only)
+app.get('/api/admin/api-tokens', authenticateToken, requireTopGun, async (req, res) => {
   try {
     const options = {
       page: parseInt(req.query.page) || 1,
@@ -433,8 +433,8 @@ app.get('/api/admin/api-tokens', authenticateToken, async (req, res) => {
   }
 });
 
-// Get tokens for a specific user (Protected)
-app.get('/api/admin/api-users/:userId/tokens', authenticateToken, async (req, res) => {
+// Get tokens for a specific user (Protected - Top Gun only)
+app.get('/api/admin/api-users/:userId/tokens', authenticateToken, requireTopGun, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
 
@@ -450,8 +450,8 @@ app.get('/api/admin/api-users/:userId/tokens', authenticateToken, async (req, re
   }
 });
 
-// Create new API token (Protected)
-app.post('/api/admin/api-tokens', authenticateToken, async (req, res) => {
+// Create new API token (Protected - Top Gun only)
+app.post('/api/admin/api-tokens', authenticateToken, requireTopGun, async (req, res) => {
   try {
     const { userId, name, expiresInDays, rateLimit, scope, ipWhitelist } = req.body;
     const createdBy = req.user.id;
@@ -482,8 +482,8 @@ app.post('/api/admin/api-tokens', authenticateToken, async (req, res) => {
   }
 });
 
-// Revoke API token (Protected)
-app.put('/api/admin/api-tokens/:id/revoke', authenticateToken, async (req, res) => {
+// Revoke API token (Protected - Top Gun only)
+app.put('/api/admin/api-tokens/:id/revoke', authenticateToken, requireTopGun, async (req, res) => {
   try {
     const tokenId = parseInt(req.params.id);
     const { reason } = req.body;
@@ -502,8 +502,8 @@ app.put('/api/admin/api-tokens/:id/revoke', authenticateToken, async (req, res) 
   }
 });
 
-// Update token status (Protected)
-app.put('/api/admin/api-tokens/:id/status', authenticateToken, async (req, res) => {
+// Update token status (Protected - Top Gun only)
+app.put('/api/admin/api-tokens/:id/status', authenticateToken, requireTopGun, async (req, res) => {
   try {
     const tokenId = parseInt(req.params.id);
     const { status } = req.body;
@@ -524,8 +524,8 @@ app.put('/api/admin/api-tokens/:id/status', authenticateToken, async (req, res) 
   }
 });
 
-// Delete API token (Protected)
-app.delete('/api/admin/api-tokens/:id', authenticateToken, async (req, res) => {
+// Delete API token (Protected - Top Gun only)
+app.delete('/api/admin/api-tokens/:id', authenticateToken, requireTopGun, async (req, res) => {
   try {
     const tokenId = parseInt(req.params.id);
 

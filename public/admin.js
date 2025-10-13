@@ -224,7 +224,22 @@ function showDashboard() {
   document.body.style.justifyContent = 'initial';
   document.body.style.padding = '24px';
   if (currentUser) {
-    userNameSpan.textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+    // Display user name with Top Gun badge if applicable
+    if (currentUser.role === 'Top Gun') {
+      userNameSpan.innerHTML = `${currentUser.firstName} ${currentUser.lastName} <span style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px; vertical-align: middle;">⭐ TOP GUN</span>`;
+    } else {
+      userNameSpan.textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+    }
+
+    // Show/hide API Tokens link based on role
+    const apiTokensLink = document.querySelector('a[href="/api-tokens"]');
+    if (apiTokensLink) {
+      if (currentUser.role === 'Top Gun') {
+        apiTokensLink.style.display = 'inline-block';
+      } else {
+        apiTokensLink.style.display = 'none';
+      }
+    }
   }
   fetchQueries();
 }
@@ -317,7 +332,7 @@ function renderTable(queries) {
 
     return `
       <tr class="hover:bg-gray-50">
-        <td class="px-2 py-2 text-sm">${query.id}</td>
+        <td class="px-2 py-2 text-sm" style="text-align: center;">${query.id}</td>
         <td class="px-2 py-2 text-xs font-mono">${query.searched_ip}</td>
         <td class="px-2 py-2 text-xs">${organization}</td>
         <td class="px-1 py-2 text-sm text-center">
@@ -326,10 +341,10 @@ function renderTable(queries) {
         <td class="px-2 py-2 text-xs font-mono">${query.visitor_ip || '<i class="text-gray-400">N/A</i>'}</td>
         <td class="px-2 py-2 text-xs">${query.wan_panel || '<i class="text-gray-400">N/A</i>'}</td>
         <td class="px-2 py-2 text-xs whitespace-nowrap">${formattedDate}</td>
-        <td class="px-2 py-2 text-center whitespace-nowrap">
+        <td style="padding: 8px; text-align: center; white-space: nowrap;">
           <button
-            class="delete-btn text-white px-3 py-1 rounded text-xs font-semibold border border-white"
-            style="background-color: #dc2626; min-width: 60px;"
+            class="delete-btn text-white px-3 py-1 text-xs font-semibold border border-white"
+            style="background-color: #dc2626; min-width: 60px; border-radius: 6px;"
             data-id="${query.id}"
             title="Delete query #${query.id}"
           >
@@ -594,16 +609,16 @@ function renderUsersTable(users) {
 
     return `
       <tr class="hover:bg-gray-50">
-        <td class="px-2 py-2 text-sm">${user.id}</td>
+        <td class="px-2 py-2 text-sm" style="text-align: center;">${user.id}</td>
         <td class="px-2 py-2 text-sm">${user.first_name}</td>
         <td class="px-2 py-2 text-sm">${user.last_name}</td>
         <td class="px-2 py-2 text-sm">${user.email}</td>
         <td class="px-2 py-2 text-xs whitespace-nowrap">${createdAt}</td>
         <td class="px-2 py-2 text-xs whitespace-nowrap">${lastLogin}</td>
-        <td class="px-2 py-2 text-center whitespace-nowrap">
+        <td style="padding: 8px; text-align: center; white-space: nowrap;">
           <button
-            class="edit-user-btn text-white px-3 py-1 rounded text-xs font-semibold"
-            style="background-color: #2563eb; margin-right: 4px;"
+            class="edit-user-btn text-white px-3 py-1 text-xs font-semibold"
+            style="background-color: #2563eb; margin-right: 4px; border-radius: 6px;"
             data-id="${user.id}"
             data-firstname="${user.first_name}"
             data-lastname="${user.last_name}"
@@ -613,8 +628,8 @@ function renderUsersTable(users) {
             Edit
           </button>
           <button
-            class="delete-user-btn text-white px-3 py-1 rounded text-xs font-semibold"
-            style="background-color: #dc2626;"
+            class="delete-user-btn text-white px-3 py-1 text-xs font-semibold"
+            style="background-color: #dc2626; border-radius: 6px;"
             data-id="${user.id}"
             title="Delete user #${user.id}"
           >
