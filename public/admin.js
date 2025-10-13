@@ -231,8 +231,18 @@ function showDashboard() {
       userNameSpan.textContent = `${currentUser.firstName} ${currentUser.lastName}`;
     }
 
-    // Show/hide API Tokens link based on role
+    // Show/hide Role Management and API Tokens links based on role
+    const roleManagementLink = document.querySelector('a[href="/role-management"]');
     const apiTokensLink = document.querySelector('a[href="/api-tokens"]');
+
+    if (roleManagementLink) {
+      if (currentUser.role === 'Top Gun') {
+        roleManagementLink.style.display = 'inline-block';
+      } else {
+        roleManagementLink.style.display = 'none';
+      }
+    }
+
     if (apiTokensLink) {
       if (currentUser.role === 'Top Gun') {
         apiTokensLink.style.display = 'inline-block';
@@ -321,6 +331,9 @@ function renderTable(queries) {
     return;
   }
 
+  // Check if current user has write permissions
+  const canWrite = currentUser && currentUser.role !== 'Read Only Admin';
+
   tableBody.innerHTML = queries.map(query => {
     const date = new Date(query.created_at);
     const formattedDate = date.toLocaleString();
@@ -344,9 +357,10 @@ function renderTable(queries) {
         <td style="padding: 8px; text-align: center; white-space: nowrap;">
           <button
             class="delete-btn text-white px-3 py-1 text-xs font-semibold border border-white"
-            style="background-color: #dc2626; min-width: 60px; border-radius: 6px;"
+            style="background-color: #dc2626; min-width: 60px; border-radius: 6px; ${!canWrite ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
             data-id="${query.id}"
-            title="Delete query #${query.id}"
+            title="${!canWrite ? 'Read-only access' : 'Delete query #' + query.id}"
+            ${!canWrite ? 'disabled' : ''}
           >
             Delete
           </button>
@@ -356,9 +370,11 @@ function renderTable(queries) {
   }).join('');
 
   // Add event listeners to delete buttons
-  document.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', handleDelete);
-  });
+  if (canWrite) {
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', handleDelete);
+    });
+  }
 }
 
 // Handle delete query
@@ -599,13 +615,27 @@ async function fetchUsers() {
 // Render users table
 function renderUsersTable(users) {
   if (users.length === 0) {
-    usersTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500">No users found</td></tr>';
+    usersTableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">No users found</td></tr>';
     return;
   }
+
+  // Check if current user has write permissions
+  const canWrite = currentUser && currentUser.role !== 'Read Only Admin';
 
   usersTableBody.innerHTML = users.map(user => {
     const createdAt = user.created_at ? new Date(user.created_at).toLocaleString() : 'N/A';
     const lastLogin = user.last_login ? new Date(user.last_login).toLocaleString() : 'Never';
+    const role = user.role || 'Webapp Admin';
+
+    // Role badge styling
+    let roleBadgeStyle = '';
+    if (role === 'Top Gun') {
+      roleBadgeStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;';
+    } else if (role === 'Read Only Admin') {
+      roleBadgeStyle = 'background: #fef3c7; color: #92400e;';
+    } else {
+      roleBadgeStyle = 'background: #dbeafe; color: #1e40af;';
+    }
 
     return `
       <tr class="hover:bg-gray-50">
@@ -613,25 +643,32 @@ function renderUsersTable(users) {
         <td class="px-2 py-2 text-sm">${user.first_name}</td>
         <td class="px-2 py-2 text-sm">${user.last_name}</td>
         <td class="px-2 py-2 text-sm">${user.email}</td>
+        <td class="px-2 py-2 text-xs" style="text-align: center;">
+          <span style="display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; ${roleBadgeStyle}">
+            ${role}
+          </span>
+        </td>
         <td class="px-2 py-2 text-xs whitespace-nowrap">${createdAt}</td>
         <td class="px-2 py-2 text-xs whitespace-nowrap">${lastLogin}</td>
         <td style="padding: 8px; text-align: center; white-space: nowrap;">
           <button
             class="edit-user-btn text-white px-3 py-1 text-xs font-semibold"
-            style="background-color: #2563eb; margin-right: 4px; border-radius: 6px;"
+            style="background-color: #2563eb; margin-right: 4px; border-radius: 6px; ${!canWrite ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
             data-id="${user.id}"
             data-firstname="${user.first_name}"
             data-lastname="${user.last_name}"
             data-email="${user.email}"
-            title="Edit user #${user.id}"
+            title="${!canWrite ? 'Read-only access' : 'Edit user #' + user.id}"
+            ${!canWrite ? 'disabled' : ''}
           >
             Edit
           </button>
           <button
             class="delete-user-btn text-white px-3 py-1 text-xs font-semibold"
-            style="background-color: #dc2626; border-radius: 6px;"
+            style="background-color: #dc2626; border-radius: 6px; ${!canWrite ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
             data-id="${user.id}"
-            title="Delete user #${user.id}"
+            title="${!canWrite ? 'Read-only access' : 'Delete user #' + user.id}"
+            ${!canWrite ? 'disabled' : ''}
           >
             Delete
           </button>
@@ -641,13 +678,15 @@ function renderUsersTable(users) {
   }).join('');
 
   // Add event listeners to edit and delete buttons
-  document.querySelectorAll('.edit-user-btn').forEach(btn => {
-    btn.addEventListener('click', handleEditUser);
-  });
+  if (canWrite) {
+    document.querySelectorAll('.edit-user-btn').forEach(btn => {
+      btn.addEventListener('click', handleEditUser);
+    });
 
-  document.querySelectorAll('.delete-user-btn').forEach(btn => {
-    btn.addEventListener('click', handleDeleteUser);
-  });
+    document.querySelectorAll('.delete-user-btn').forEach(btn => {
+      btn.addEventListener('click', handleDeleteUser);
+    });
+  }
 }
 
 // Handle edit user

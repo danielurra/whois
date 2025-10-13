@@ -176,3 +176,27 @@ export const requireTopGun = (req, res, next) => {
   }
   next();
 };
+
+// Middleware to check for write permissions (blocks Read Only Admin from write operations)
+export const requireWritePermission = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+
+  // Read Only Admin cannot perform write operations
+  if (req.user.role === 'Read Only Admin') {
+    return res.status(403).json({ error: 'Access denied. Read-only access only.' });
+  }
+
+  next();
+};
+
+// Helper function to check if user has read access
+export const hasReadAccess = (role) => {
+  return ['Top Gun', 'Webapp Admin', 'Read Only Admin'].includes(role);
+};
+
+// Helper function to check if user has write access
+export const hasWriteAccess = (role) => {
+  return ['Top Gun', 'Webapp Admin'].includes(role);
+};

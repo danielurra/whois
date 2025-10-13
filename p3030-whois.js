@@ -8,7 +8,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import db from './server/db.js';
-import { authenticateToken, register, login, verifyToken, requireTopGun } from './server/auth.js';
+import { authenticateToken, register, login, verifyToken, requireTopGun, requireWritePermission } from './server/auth.js';
 import * as apiTokenManager from './server/api-token-manager.js';
 
 // __dirname workaround in ESM
@@ -180,8 +180,8 @@ app.get('/api/admin/queries', authenticateToken, async (req, res) => {
   }
 });
 
-// Delete query by ID (Protected)
-app.delete('/api/admin/queries/:id', authenticateToken, async (req, res) => {
+// Delete query by ID (Protected - requires write permission)
+app.delete('/api/admin/queries/:id', authenticateToken, requireWritePermission, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
@@ -233,7 +233,7 @@ app.get('/api/admin/users', authenticateToken, async (req, res) => {
 
     // Get paginated results (exclude password_hash)
     const dataQuery = `
-      SELECT id, first_name, last_name, email, created_at, last_login
+      SELECT id, first_name, last_name, email, role, created_at, last_login
       FROM reguser
       ${whereClause}
       ORDER BY ${safeSortBy} ${sortOrder}
@@ -256,8 +256,8 @@ app.get('/api/admin/users', authenticateToken, async (req, res) => {
   }
 });
 
-// Update user by ID (Protected)
-app.put('/api/admin/users/:id', authenticateToken, async (req, res) => {
+// Update user by ID (Protected - requires write permission)
+app.put('/api/admin/users/:id', authenticateToken, requireWritePermission, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { firstName, lastName, email } = req.body;
@@ -304,8 +304,8 @@ app.put('/api/admin/users/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Delete user by ID (Protected)
-app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
+// Delete user by ID (Protected - requires write permission)
+app.delete('/api/admin/users/:id', authenticateToken, requireWritePermission, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
@@ -329,6 +329,160 @@ app.delete('/api/admin/users/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// ========== ROLE MANAGEMENT ENDPOINTS (Top Gun Only) ==========
+
+// Get all available roles
+app.get('/api/admin/roles', authenticateToken, requireTopGun, async (req, res) => {
+  try {
+    const roles = [
+      {
+        name: 'Top Gun',
+        description: 'Full administrative access including role management and API token management',
+        permissions: ['read', 'write', 'delete', 'manage_roles', 'manage_api_tokens']
+      },
+      {
+        name: 'Webapp Admin',
+        description: 'Standard administrative access to queries and users',
+        permissions: ['read', 'write', 'delete']
+      },
+      {
+        name: 'Read Only Admin',
+        description: 'View-only access to admin dashboard',
+        permissions: ['read']
+      }
+    ];
+    res.json({ roles });
+  } catch (error) {
+    console.error('Error fetching roles:', error);
+    res.status(500).json({ error: 'Failed to fetch roles' });
+  }
+});
+
+// Get role audit log (Top Gun only)
+app.get('/api/admin/role-audit', authenticateToken, requireTopGun, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+    const search = req.query.search || '';
+    const sortBy = req.query.sortBy || 'created_at';
+    const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+    // Validate sortBy to prevent SQL injection
+    const allowedSortFields = ['id', 'created_at', 'user_id', 'previous_role', 'new_role'];
+    const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
+
+    // Build search query
+    let whereClause = '';
+    let queryParams = [];
+    if (search) {
+      whereClause = `WHERE u.first_name LIKE ? OR u.last_name LIKE ? OR u.email LIKE ?
+                     OR ra.previous_role LIKE ? OR ra.new_role LIKE ?`;
+      const searchPattern = `%${search}%`;
+      queryParams = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
+    }
+
+    // Get total count for pagination
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM role_audit ra
+      JOIN reguser u ON ra.user_id = u.id
+      ${whereClause}
+    `;
+    const [countRows] = await db.execute(countQuery, queryParams);
+    const total = countRows[0].total;
+
+    // Get paginated results with user information
+    const dataQuery = `
+      SELECT
+        ra.id,
+        ra.user_id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        ra.previous_role,
+        ra.new_role,
+        ra.changed_by_user_id,
+        cb.first_name as changed_by_first_name,
+        cb.last_name as changed_by_last_name,
+        ra.change_reason,
+        ra.created_at
+      FROM role_audit ra
+      JOIN reguser u ON ra.user_id = u.id
+      JOIN reguser cb ON ra.changed_by_user_id = cb.id
+      ${whereClause}
+      ORDER BY ra.${safeSortBy} ${sortOrder}
+      LIMIT ? OFFSET ?
+    `;
+    const [rows] = await db.execute(dataQuery, [...queryParams, limit, offset]);
+
+    res.json({
+      data: rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching role audit log:', error);
+    res.status(500).json({ error: 'Failed to fetch role audit log' });
+  }
+});
+
+// Update user role (Top Gun only)
+app.put('/api/admin/users/:id/role', authenticateToken, requireTopGun, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { role, reason } = req.body;
+    const changedBy = req.user.id;
+
+    if (!userId || isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    // Validate role
+    const validRoles = ['Top Gun', 'Webapp Admin', 'Read Only Admin'];
+    if (!role || !validRoles.includes(role)) {
+      return res.status(400).json({ error: 'Invalid role. Must be one of: Top Gun, Webapp Admin, Read Only Admin' });
+    }
+
+    // Prevent changing your own role
+    if (userId === req.user.id) {
+      return res.status(400).json({ error: 'Cannot change your own role' });
+    }
+
+    // Get current user role
+    const [users] = await db.execute('SELECT role FROM reguser WHERE id = ?', [userId]);
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const previousRole = users[0].role;
+
+    // Update the user's role
+    await db.execute('UPDATE reguser SET role = ? WHERE id = ?', [role, userId]);
+
+    // Log the role change in audit table
+    await db.execute(
+      'INSERT INTO role_audit (user_id, previous_role, new_role, changed_by_user_id, change_reason) VALUES (?, ?, ?, ?, ?)',
+      [userId, previousRole, role, changedBy, reason || null]
+    );
+
+    res.json({
+      message: 'User role updated successfully',
+      userId,
+      previousRole,
+      newRole: role
+    });
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    res.status(500).json({ error: 'Failed to update user role' });
   }
 });
 
@@ -549,6 +703,10 @@ app.get('/reguser', (req, res) => {
 
 app.get('/api-tokens', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'api-tokens.html'));
+});
+
+app.get('/role-management', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'role-management.html'));
 });
 
 // Serve static files from public directory
